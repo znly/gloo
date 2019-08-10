@@ -69,6 +69,9 @@ rbac:
 settings:
   singleNamespace: true
   create: true
+global:
+  image:
+    pullPolicy: Always
 `))
 	values.Close()
 
