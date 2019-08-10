@@ -57,6 +57,8 @@ var _ = Describe("Helm Test", func() {
 			f.Close()
 			manifestYaml = f.Name()
 
+			helmFlags = "--set global.image.version=dev --set global.image.registry=quay.io/solo-io " + helmFlags
+
 			MustMake(".", "-C", "../..", "install/gloo-gateway.yaml", "HELMFLAGS="+helmFlags, "OUTPUT_YAML="+manifestYaml)
 			testManifest = NewTestManifest(manifestYaml)
 		}
