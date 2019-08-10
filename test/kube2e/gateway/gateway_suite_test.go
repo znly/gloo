@@ -62,7 +62,14 @@ func StartTestHelper() {
 
 	values, err = ioutil.TempFile("", "*.yaml")
 	Expect(err).NotTo(HaveOccurred())
-	values.Write([]byte("rbac:\n  namespaced: true\nsettings:\n  singleNamespace: true\n  create: true\n"))
+	values.Write([]byte(
+		`
+rbac:
+  namespaced: true
+settings:
+  singleNamespace: true
+  create: true
+`))
 	values.Close()
 
 	err = testHelper.InstallGloo(helper.GATEWAY, 5*time.Minute, helper.ExtraArgs("--values", values.Name()))
