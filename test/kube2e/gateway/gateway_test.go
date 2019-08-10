@@ -140,13 +140,11 @@ var _ = Describe("Kube2e: gateway", func() {
 		serviceClient = service.NewServiceClient(kubeClient, kubeCoreCache)
 	})
 
-	Context("tests with virtual service", func() {
+	AfterEach(func() {
+		cancel()
+	})
 
-		AfterEach(func() {
-			cancel()
-			err := virtualServiceClient.Delete(testHelper.InstallNamespace, "vs", clients.DeleteOpts{})
-			Expect(err).NotTo(HaveOccurred())
-		})
+	Context("tests with virtual service", func() {
 
 		It("correctly routes requests to an upstream", func() {
 			dest := &gloov1.Destination{
