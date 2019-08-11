@@ -90,8 +90,8 @@ var _ = Describe("Load", func() {
 		Expect(err).NotTo(HaveOccurred())
 		settings.Kubernetes = &gloov1.Settings_KubernetesConfiguration{
 			RateLimits: &gloov1.Settings_KubernetesConfiguration_RateLimits{
-				QPS:   100,
-				Burst: 200,
+				QPS:   200,
+				Burst: 400,
 			},
 		}
 		_, err = settingsClient.Write(settings, clients.WriteOpts{OverwriteExisting: true})
