@@ -1,3 +1,0 @@
-changelog:
-  - type: NON_USER_FACING
-    description: Add a test that creates 200 services.

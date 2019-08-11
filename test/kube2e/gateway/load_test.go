@@ -36,6 +36,7 @@ var _ = Describe("Load", func() {
 
 		virtualServiceClient gatewayv1.VirtualServiceClient
 		upstreamClient       gloov1.UpstreamClient
+		settingsClient       gloov1.SettingsClient
 	)
 	var _ = BeforeEach(StartTestHelper)
 	var _ = AfterEach(TearDownTestHelper)
@@ -58,7 +59,11 @@ var _ = Describe("Load", func() {
 			Cfg:         cfg,
 			SharedCache: cache,
 		}
-
+		settingsClientFactory := &factory.KubeResourceClientFactory{
+			Crd:         gloov1.SettingsCrd,
+			Cfg:         cfg,
+			SharedCache: cache,
+		}
 		virtualServiceClient, err = gatewayv1.NewVirtualServiceClient(virtualServiceClientFactory)
 		Expect(err).NotTo(HaveOccurred())
 		err = virtualServiceClient.Register()
@@ -69,12 +74,34 @@ var _ = Describe("Load", func() {
 		err = upstreamClient.Register()
 		Expect(err).NotTo(HaveOccurred())
 
+		settingsClient, err = gloov1.NewSettingsClient(settingsClientFactory)
+		Expect(err).NotTo(HaveOccurred())
+		err = settingsClient.Register()
+		Expect(err).NotTo(HaveOccurred())
+
 	})
 	AfterEach(func() {
 		cancel()
 	})
 
+	increaseQps := func() {
+
+		settings, err := settingsClient.Read(testHelper.InstallNamespace, "default", clients.ReadOpts{})
+		Expect(err).NotTo(HaveOccurred())
+		settings.Kubernetes = &gloov1.Settings_KubernetesConfiguration{
+			RateLimits: &gloov1.Settings_KubernetesConfiguration_RateLimits{
+				QPS:   100,
+				Burst: 200,
+			},
+		}
+		_, err = settingsClient.Write(settings, clients.WriteOpts{OverwriteExisting: true})
+		Expect(err).NotTo(HaveOccurred())
+	}
+
 	It("should process 200 services", func() {
+
+		increaseQps()
+
 		err := testutils.Kubectl("create", "deployment", "-n", testHelper.InstallNamespace, "--image", "soloio/petstore-example:latest", "petstore")
 		Expect(err).NotTo(HaveOccurred())
 		var lastname string
