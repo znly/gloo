@@ -120,7 +120,7 @@ steps:
   - 'DOCKER_CONFIG=/workspace/.docker/'
   - 'HELM_HOME=/root/.helm'
   dir: './gopath/src/github.com/solo-io/gloo'
-  args: ['-r', '-failFast', '-race']
+  args: ['-r', '-failFast', '-race', '-p', '-stream']
   waitFor: ['get-envoy', 'setup-aws-creds', 'fetch-helm', 'check-code-and-docs-gen', 'set-zone']
   secretEnv: ['AWS_ARN_ROLE_1']
   id: 'test'
@@ -167,7 +167,8 @@ steps:
     - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-roles'
     - 'RUN_KUBE2E_TESTS=1'
   dir: './gopath/src/github.com/solo-io/gloo'
-  args: ['-r', 'test/kube2e', '-failFast']
+  # -stream makes tests not stuck: https://github.com/onsi/ginkgo/issues/517
+  args: ['-r', 'test/kube2e', '-failFast', '-p', '-stream']
   waitFor: ['build-test-assets', 'set-zone']
   id: 'regression-tests'
 - name: gcr.io/cloud-builders/gcloud
