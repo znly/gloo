@@ -2,6 +2,7 @@ package secret_test
 
 import (
 	"fmt"
+
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/constants"
 
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/argsutils"

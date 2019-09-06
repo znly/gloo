@@ -1,27 +1,19 @@
 ---
-title: "glooctl edit virtualservice"
+title: "glooctl edit virtualservice ratelimit"
 weight: 5
 ---
-## glooctl edit virtualservice
+## glooctl edit virtualservice ratelimit
 
-edit a virtualservice in a namespace
+Configure rate limit settings (Enterprise)
 
 ### Synopsis
 
-usage: glooctl edit virtualservice [NAME] [--namespace=namespace] [-o FORMAT]
-
-```
-glooctl edit virtualservice [flags]
-```
+Let gloo know the location of the rate limit server. This is a Gloo Enterprise feature.
 
 ### Options
 
 ```
-  -h, --help                          help for virtualservice
-      --ssl-remove                    Remove SSL configuration from this virtual service
-      --ssl-secret-name string        name of the ssl secret for this virtual service
-      --ssl-secret-namespace string   namespace of the ssl secret for this virtual service
-      --ssl-sni-domains stringArray   SNI domains for this virtual service
+  -h, --help   help for ratelimit
 ```
 
 ### Options inherited from parent commands
@@ -42,6 +34,6 @@ glooctl edit virtualservice [flags]
 
 ### SEE ALSO
 
-* [glooctl edit](../glooctl_edit)	 - Edit a Gloo resource
-* [glooctl edit virtualservice ratelimit](../glooctl_edit_virtualservice_ratelimit)	 - Configure rate limit settings (Enterprise)
+* [glooctl edit virtualservice](../glooctl_edit_virtualservice)	 - edit a virtualservice in a namespace
+* [glooctl edit virtualservice ratelimit custom-envoy-config](../glooctl_edit_virtualservice_ratelimit_custom-envoy-config)	 - Add a custom rate limit actions (Enterprise)
 

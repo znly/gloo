@@ -1,27 +1,25 @@
 ---
-title: "glooctl edit virtualservice"
+title: "glooctl edit settings externalauth"
 weight: 5
 ---
-## glooctl edit virtualservice
+## glooctl edit settings externalauth
 
-edit a virtualservice in a namespace
+Configure external auth settings (Enterprise)
 
 ### Synopsis
 
-usage: glooctl edit virtualservice [NAME] [--namespace=namespace] [-o FORMAT]
+Let gloo know the location of the ext auth server. This is a Gloo Enterprise feature.
 
 ```
-glooctl edit virtualservice [flags]
+glooctl edit settings externalauth [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help                          help for virtualservice
-      --ssl-remove                    Remove SSL configuration from this virtual service
-      --ssl-secret-name string        name of the ssl secret for this virtual service
-      --ssl-secret-namespace string   namespace of the ssl secret for this virtual service
-      --ssl-sni-domains stringArray   SNI domains for this virtual service
+      --extauth-server-name string        name of the ext auth server upstream
+      --extauth-server-namespace string   namespace of the ext auth server upstream
+  -h, --help                              help for externalauth
 ```
 
 ### Options inherited from parent commands
@@ -42,6 +40,5 @@ glooctl edit virtualservice [flags]
 
 ### SEE ALSO
 
-* [glooctl edit](../glooctl_edit)	 - Edit a Gloo resource
-* [glooctl edit virtualservice ratelimit](../glooctl_edit_virtualservice_ratelimit)	 - Configure rate limit settings (Enterprise)
+* [glooctl edit settings](../glooctl_edit_settings)	 - root command for settings
 

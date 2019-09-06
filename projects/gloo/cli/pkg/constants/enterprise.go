@@ -1,7 +1,7 @@
 package constants
 
 const (
-	RateLimitExtensionName = "rate-limit"
+	RateLimitExtensionName      = "rate-limit"
 	EnvoyRateLimitExtensionName = "envoy-rate-limit"
-	ExtAuthExtensionName   = "extauth"
+	ExtAuthExtensionName        = "extauth"
 )

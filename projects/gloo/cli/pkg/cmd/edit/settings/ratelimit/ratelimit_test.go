@@ -1,8 +1,9 @@
 package ratelimit_test
 
 import (
-	"github.com/solo-io/gloo/projects/gloo/cli/pkg/constants"
 	"time"
+
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/constants"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

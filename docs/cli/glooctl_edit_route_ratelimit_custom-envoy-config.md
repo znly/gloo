@@ -1,27 +1,26 @@
 ---
-title: "glooctl edit virtualservice"
+title: "glooctl edit route ratelimit custom-envoy-config"
 weight: 5
 ---
-## glooctl edit virtualservice
+## glooctl edit route ratelimit custom-envoy-config
 
-edit a virtualservice in a namespace
+Add a custom rate limit actions (Enterprise)
 
 ### Synopsis
 
-usage: glooctl edit virtualservice [NAME] [--namespace=namespace] [-o FORMAT]
+This allows using envoy actions to specify your rate limit descriptors.
+		For available actions and more information see: https://www.envoyproxy.io/docs/envoy/v1.9.0/api-v2/api/v2/route/route.proto#route-ratelimit-action
+		
+		This is a Gloo Enterprise feature.
 
 ```
-glooctl edit virtualservice [flags]
+glooctl edit route ratelimit custom-envoy-config [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help                          help for virtualservice
-      --ssl-remove                    Remove SSL configuration from this virtual service
-      --ssl-secret-name string        name of the ssl secret for this virtual service
-      --ssl-secret-namespace string   namespace of the ssl secret for this virtual service
-      --ssl-sni-domains stringArray   SNI domains for this virtual service
+  -h, --help   help for custom-envoy-config
 ```
 
 ### Options inherited from parent commands
@@ -32,6 +31,7 @@ glooctl edit virtualservice [flags]
       --consul-root-key string     key prefix for for Consul key-value storage. (default "gloo")
       --consul-scheme string       URI scheme for the Consul server. Use with --use-consul (default "http")
       --consul-token string        Token is used to provide a per-request ACL token which overrides the agent's default token. Use with --use-consul
+  -x, --index uint32               edit the route with this index in the virtual service route list
   -i, --interactive                use interactive mode
       --name string                name of the resource to read or write
   -n, --namespace string           namespace for reading or writing resources (default "gloo-system")
@@ -42,6 +42,5 @@ glooctl edit virtualservice [flags]
 
 ### SEE ALSO
 
-* [glooctl edit](../glooctl_edit)	 - Edit a Gloo resource
-* [glooctl edit virtualservice ratelimit](../glooctl_edit_virtualservice_ratelimit)	 - Configure rate limit settings (Enterprise)
+* [glooctl edit route ratelimit](../glooctl_edit_route_ratelimit)	 - Configure rate limit settings (Enterprise)
 

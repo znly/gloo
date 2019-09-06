@@ -3,10 +3,10 @@ package settings
 import (
 	editOptions "github.com/solo-io/gloo/projects/gloo/cli/pkg/cmd/edit/options"
 
-	"github.com/solo-io/gloo/projects/gloo/cli/pkg/flagutils"
-	"github.com/solo-io/go-utils/cliutils"
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/cmd/edit/settings/ratelimit"
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/constants"
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/flagutils"
+	"github.com/solo-io/go-utils/cliutils"
 	"github.com/spf13/cobra"
 )
 

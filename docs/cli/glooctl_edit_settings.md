@@ -1,27 +1,19 @@
 ---
-title: "glooctl edit virtualservice"
+title: "glooctl edit settings"
 weight: 5
 ---
-## glooctl edit virtualservice
+## glooctl edit settings
 
-edit a virtualservice in a namespace
+root command for settings
 
 ### Synopsis
 
-usage: glooctl edit virtualservice [NAME] [--namespace=namespace] [-o FORMAT]
-
-```
-glooctl edit virtualservice [flags]
-```
+root command for settings
 
 ### Options
 
 ```
-  -h, --help                          help for virtualservice
-      --ssl-remove                    Remove SSL configuration from this virtual service
-      --ssl-secret-name string        name of the ssl secret for this virtual service
-      --ssl-secret-namespace string   namespace of the ssl secret for this virtual service
-      --ssl-sni-domains stringArray   SNI domains for this virtual service
+  -h, --help   help for settings
 ```
 
 ### Options inherited from parent commands
@@ -43,5 +35,6 @@ glooctl edit virtualservice [flags]
 ### SEE ALSO
 
 * [glooctl edit](../glooctl_edit)	 - Edit a Gloo resource
-* [glooctl edit virtualservice ratelimit](../glooctl_edit_virtualservice_ratelimit)	 - Configure rate limit settings (Enterprise)
+* [glooctl edit settings externalauth](../glooctl_edit_settings_externalauth)	 - Configure external auth settings (Enterprise)
+* [glooctl edit settings ratelimit](../glooctl_edit_settings_ratelimit)	 - Configure rate limit settings (Enterprise)
 

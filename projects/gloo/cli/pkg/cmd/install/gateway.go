@@ -2,6 +2,7 @@ package install
 
 import (
 	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/solo-io/gloo/pkg/cliutil/install"
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/constants"
@@ -38,7 +39,6 @@ func gatewayCmd(opts *options.Options) *cobra.Command {
 	flagutils.AddInstallFlags(pflags, &opts.Install)
 	return cmd
 }
-
 
 // enterprise
 func GetEnterpriseInstallSpec(opts *options.Options) (*GlooInstallSpec, error) {

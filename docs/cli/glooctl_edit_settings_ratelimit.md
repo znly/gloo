@@ -1,27 +1,27 @@
 ---
-title: "glooctl edit virtualservice"
+title: "glooctl edit settings ratelimit"
 weight: 5
 ---
-## glooctl edit virtualservice
+## glooctl edit settings ratelimit
 
-edit a virtualservice in a namespace
+Configure rate limit settings (Enterprise)
 
 ### Synopsis
 
-usage: glooctl edit virtualservice [NAME] [--namespace=namespace] [-o FORMAT]
+Let gloo know the location of the rate limit server. This is a Gloo Enterprise feature.
 
 ```
-glooctl edit virtualservice [flags]
+glooctl edit settings ratelimit [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help                          help for virtualservice
-      --ssl-remove                    Remove SSL configuration from this virtual service
-      --ssl-secret-name string        name of the ssl secret for this virtual service
-      --ssl-secret-namespace string   namespace of the ssl secret for this virtual service
-      --ssl-sni-domains stringArray   SNI domains for this virtual service
+      --deny-on-failure                     On a failure to contact rate limit server, or on a timeout - deny the request (default is to allow) (default nil)
+  -h, --help                                help for ratelimit
+      --ratelimit-server-name string        name of the ext rate limit upstream
+      --ratelimit-server-namespace string   namespace of the ext rate limit upstream
+      --request-timeout duration            The timeout of the request to the rate limit server. set to 0 to use the default.
 ```
 
 ### Options inherited from parent commands
@@ -42,6 +42,6 @@ glooctl edit virtualservice [flags]
 
 ### SEE ALSO
 
-* [glooctl edit](../glooctl_edit)	 - Edit a Gloo resource
-* [glooctl edit virtualservice ratelimit](../glooctl_edit_virtualservice_ratelimit)	 - Configure rate limit settings (Enterprise)
+* [glooctl edit settings](../glooctl_edit_settings)	 - root command for settings
+* [glooctl edit settings ratelimit custom-server-config](../glooctl_edit_settings_ratelimit_custom-server-config)	 - Add a custom rate limit settings (Enterprise)
 

@@ -2,14 +2,15 @@ package testutils
 
 import (
 	"bytes"
-	"github.com/gogo/protobuf/types"
-	v1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1"
-	"github.com/solo-io/gloo/projects/gloo/pkg/defaults"
-	"github.com/solo-io/solo-kit/pkg/api/v1/resources/core"
 	"io"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/gogo/protobuf/types"
+	v1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1"
+	"github.com/solo-io/gloo/projects/gloo/pkg/defaults"
+	"github.com/solo-io/solo-kit/pkg/api/v1/resources/core"
 
 	"github.com/spf13/cobra"
 

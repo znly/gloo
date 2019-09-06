@@ -2,6 +2,7 @@ package virtualservice
 
 import (
 	"fmt"
+
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/constants"
 
 	"github.com/gogo/protobuf/types"

@@ -1,23 +1,36 @@
 ---
-title: "glooctl create secret"
+title: "glooctl create secret apikey"
 weight: 5
 ---
-## glooctl create secret
+## glooctl create secret apikey
 
-Create a secret
+Create an ApiKey secret with the given name (Enterprise)
 
 ### Synopsis
 
-Create a secret
+Create an ApiKey secret with the given name. The ApiKey secret contains a single apikey. This is an enterprise-only feature.
 
 ```
-glooctl create secret [flags]
+glooctl create secret apikey [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help                           help for secret
+      --apikey string           apikey to be stored in secret
+      --apikey-generate         generate an apikey
+      --apikey-labels strings   comma-separated labels for the apikey secret (key=value)
+  -h, --help                    help for apikey
+```
+
+### Options inherited from parent commands
+
+```
+      --dry-run                        print kubernetes-formatted yaml rather than creating or updating a resource
+  -i, --interactive                    use interactive mode
+      --name string                    name of the resource to read or write
+  -n, --namespace string               namespace for reading or writing resources (default "gloo-system")
+  -o, --output OutputType              output format: (yaml, json, table, kube-yaml, wide) (default table)
       --use-vault                      use Vault Key-Value storage as the backend for reading and writing secrets
       --vault-address string           address of the Vault server. This should be a complete  URL such as "http://vault.example.com". Use with --use-vault (default "https://127.0.0.1:8200")
       --vault-ca-cert string           CACert is the path to a PEM-encoded CA cert file to use to verify the Vault server SSL certificate.Use with --use-vault
@@ -30,22 +43,7 @@ glooctl create secret [flags]
       --vault-token string             address of the Vault server. This should be a complete  URL such as "http://vault.example.com". Use with --use-vault
 ```
 
-### Options inherited from parent commands
-
-```
-      --dry-run             print kubernetes-formatted yaml rather than creating or updating a resource
-  -i, --interactive         use interactive mode
-      --name string         name of the resource to read or write
-  -n, --namespace string    namespace for reading or writing resources (default "gloo-system")
-  -o, --output OutputType   output format: (yaml, json, table, kube-yaml, wide) (default table)
-```
-
 ### SEE ALSO
 
-* [glooctl create](../glooctl_create)	 - Create a Gloo resource
-* [glooctl create secret apikey](../glooctl_create_secret_apikey)	 - Create an ApiKey secret with the given name (Enterprise)
-* [glooctl create secret aws](../glooctl_create_secret_aws)	 - Create an AWS secret with the given name
-* [glooctl create secret azure](../glooctl_create_secret_azure)	 - Create an Azure secret with the given name
-* [glooctl create secret oauth](../glooctl_create_secret_oauth)	 - Create an OAuth secret with the given name (Enterprise)
-* [glooctl create secret tls](../glooctl_create_secret_tls)	 - Create a secret with the given name
+* [glooctl create secret](../glooctl_create_secret)	 - Create a secret
 

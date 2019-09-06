@@ -1,9 +1,9 @@
 package ratelimit
 
 import (
-	"github.com/solo-io/go-utils/cliutils"
 	editRouteOptions "github.com/solo-io/gloo/projects/gloo/cli/pkg/cmd/edit/route/options"
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/constants"
+	"github.com/solo-io/go-utils/cliutils"
 	"github.com/spf13/cobra"
 )
 
