@@ -1,20 +1,20 @@
 package ratelimit
 
 import (
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/constants"
 	"regexp"
 	"strings"
 
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	editOptions "github.com/solo-io/gloo/projects/gloo/cli/pkg/cmd/edit/options"
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/cmdutils"
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/helpers"
 	gloov1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1"
 	ratelimitpb "github.com/solo-io/gloo/projects/gloo/pkg/api/v1/enterprise/plugins/ratelimit"
 	"github.com/solo-io/gloo/projects/gloo/pkg/plugins/utils"
 	"github.com/solo-io/go-utils/protoutils"
 	"github.com/solo-io/solo-kit/pkg/api/v1/clients"
-	"github.com/solo-io/gloo/projects/gloo/cli/pkg/cmdutils"
-	"github.com/solo-io/gloo/projects/gloo/pkg/plugins/ratelimit"
 
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/spf13/cobra"
@@ -45,7 +45,7 @@ func edit(opts *editOptions.EditOptions) error {
 	}
 
 	var rlSettings ratelimitpb.EnvoySettings
-	err = utils.UnmarshalExtension(settings, ratelimit.EnvoyExtensionName, &rlSettings)
+	err = utils.UnmarshalExtension(settings, constants.EnvoyRateLimitExtensionName, &rlSettings)
 	if err != nil {
 		if err != utils.NotFoundError {
 			return err
@@ -86,7 +86,7 @@ func edit(opts *editOptions.EditOptions) error {
 		settings.Extensions.Configs = make(map[string]*types.Struct)
 	}
 
-	settings.Extensions.Configs[ratelimit.EnvoyExtensionName] = rlStruct
+	settings.Extensions.Configs[constants.EnvoyRateLimitExtensionName] = rlStruct
 	_, err = settingsClient.Write(settings, clients.WriteOpts{OverwriteExisting: true})
 
 	return err

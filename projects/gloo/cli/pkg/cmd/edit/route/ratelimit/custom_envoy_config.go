@@ -3,13 +3,13 @@ package ratelimit
 import (
 	"github.com/gogo/protobuf/types"
 	gatewayv1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1"
+	editRouteOptions "github.com/solo-io/gloo/projects/gloo/cli/pkg/cmd/edit/route/options"
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/cmdutils"
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/constants"
 	gloov1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1"
 	ratelimitpb "github.com/solo-io/gloo/projects/gloo/pkg/api/v1/enterprise/plugins/ratelimit"
 	"github.com/solo-io/gloo/projects/gloo/pkg/plugins/utils"
 	"github.com/solo-io/go-utils/protoutils"
-	editRouteOptions "github.com/solo-io/gloo/projects/gloo/cli/pkg/cmd/edit/route/options"
-	"github.com/solo-io/gloo/projects/gloo/cli/pkg/cmdutils"
-	"github.com/solo-io/gloo/projects/gloo/pkg/plugins/ratelimit"
 
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/spf13/cobra"
@@ -39,7 +39,7 @@ func RateLimitCustomConfig(opts *editRouteOptions.RouteEditInput, optionsFunc ..
 func editRoute(opts *editRouteOptions.RouteEditInput) error {
 	return editRouteOptions.UpdateRoute(opts, func(route *gatewayv1.Route) error {
 		ratelimitRouteExtension := new(ratelimitpb.RateLimitRouteExtension)
-		err := utils.UnmarshalExtension(route.RoutePlugins, ratelimit.EnvoyExtensionName, ratelimitRouteExtension)
+		err := utils.UnmarshalExtension(route.RoutePlugins, constants.EnvoyRateLimitExtensionName, ratelimitRouteExtension)
 		if err != nil {
 			if err != utils.NotFoundError {
 				return err
@@ -68,7 +68,7 @@ func editRoute(opts *editRouteOptions.RouteEditInput) error {
 		if err != nil {
 			return err
 		}
-		route.RoutePlugins.Extensions.Configs[ratelimit.EnvoyExtensionName] = extStruct
+		route.RoutePlugins.Extensions.Configs[constants.EnvoyRateLimitExtensionName] = extStruct
 		return nil
 	})
 }

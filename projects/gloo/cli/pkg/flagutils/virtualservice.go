@@ -9,10 +9,10 @@ import (
 func AddVirtualServiceFlags(set *pflag.FlagSet, vs *options.InputVirtualService) {
 	addDisplayNameFlag(set, &vs.DisplayName)
 	addDomainsFlag(set, &vs.Domains)
-	addVirtualServiceFlagsRateLinmit(set, &opts.RateLimit)
-	addVirtualServiceFlagsOIDC(set, &opts.OIDCAuth)
-	addVirtualServiceFlagsApiKey(set, &opts.ApiKeyAuth)
-	addVirtualServiceFlagsOpa(set, &opts.OpaAuth)
+	addVirtualServiceFlagsRateLinmit(set, &vs.RateLimit)
+	addVirtualServiceFlagsOIDC(set, &vs.OIDCAuth)
+	addVirtualServiceFlagsApiKey(set, &vs.ApiKeyAuth)
+	addVirtualServiceFlagsOpa(set, &vs.OpaAuth)
 }
 
 func addDisplayNameFlag(set *pflag.FlagSet, ptr *string) {

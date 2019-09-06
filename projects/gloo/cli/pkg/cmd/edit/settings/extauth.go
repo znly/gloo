@@ -3,8 +3,11 @@ package settings
 import (
 	"github.com/gogo/protobuf/types"
 	editOptions "github.com/solo-io/gloo/projects/gloo/cli/pkg/cmd/edit/options"
-
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/cmd/options"
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/constants"
+	flagutilsExt "github.com/solo-io/gloo/projects/gloo/cli/pkg/flagutils"
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/helpers"
+	surveyutilsExt "github.com/solo-io/gloo/projects/gloo/cli/pkg/surveyutils"
 	gloov1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1"
 	extauthpb "github.com/solo-io/gloo/projects/gloo/pkg/api/v1/enterprise/plugins/extauth"
 	"github.com/solo-io/gloo/projects/gloo/pkg/plugins/utils"
@@ -13,11 +16,6 @@ import (
 	"github.com/solo-io/solo-kit/pkg/api/v1/clients"
 	"github.com/solo-io/solo-kit/pkg/api/v1/resources/core"
 	"github.com/solo-io/solo-kit/pkg/errors"
-	"github.com/solo-io/gloo/projects/gloo/cli/pkg/cmd/options"
-	"github.com/solo-io/gloo/projects/gloo/cli/pkg/constants"
-	flagutilsExt "github.com/solo-io/gloo/projects/gloo/cli/pkg/flagutils"
-	surveyutilsExt "github.com/solo-io/gloo/projects/gloo/cli/pkg/surveyutils"
-	"github.com/solo-io/gloo/projects/gloo/pkg/plugins/extauth"
 	"github.com/spf13/cobra"
 )
 
@@ -59,7 +57,7 @@ func editSettings(opts *editOptions.EditOptions, optsExt *options.OIDCSettings, 
 	}
 
 	var extAuthSettings extauthpb.Settings
-	err = utils.UnmarshalExtension(settings, extauth.ExtensionName, &extAuthSettings)
+	err = utils.UnmarshalExtension(settings, constants.ExtAuthExtensionName, &extAuthSettings)
 	if err != nil {
 		if err != utils.NotFoundError {
 			return err
@@ -87,7 +85,7 @@ func editSettings(opts *editOptions.EditOptions, optsExt *options.OIDCSettings, 
 	if err != nil {
 		return err
 	}
-	settings.Extensions.Configs[extauth.ExtensionName] = extStruct
+	settings.Extensions.Configs[constants.ExtAuthExtensionName] = extStruct
 
 	_, err = settingsClient.Write(settings, clients.WriteOpts{OverwriteExisting: true})
 	return err

@@ -7,6 +7,7 @@ import (
 	editOptions "github.com/solo-io/gloo/projects/gloo/cli/pkg/cmd/edit/options"
 
 	"github.com/solo-io/gloo/pkg/cliutil"
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/constants"
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/helpers"
 	gloov1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1"
 	ratelimitpb "github.com/solo-io/gloo/projects/gloo/pkg/api/v1/enterprise/plugins/ratelimit"
@@ -16,8 +17,6 @@ import (
 	"github.com/solo-io/solo-kit/pkg/api/v1/clients"
 	"github.com/solo-io/solo-kit/pkg/api/v1/resources/core"
 	"github.com/solo-io/solo-kit/pkg/errors"
-	"github.com/solo-io/gloo/projects/gloo/cli/pkg/constants"
-	"github.com/solo-io/gloo/projects/gloo/pkg/plugins/ratelimit"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -61,7 +60,7 @@ func editSettings(opts *editOptions.EditOptions, optsExt *RateLimitSettings, arg
 	}
 
 	var rlSettings ratelimitpb.Settings
-	err = utils.UnmarshalExtension(settings, ratelimit.ExtensionName, &rlSettings)
+	err = utils.UnmarshalExtension(settings, constants.RateLimitExtensionName, &rlSettings)
 	if err != nil {
 		if err != utils.NotFoundError {
 			return err
@@ -97,7 +96,7 @@ func editSettings(opts *editOptions.EditOptions, optsExt *RateLimitSettings, arg
 	if err != nil {
 		return err
 	}
-	settings.Extensions.Configs[ratelimit.ExtensionName] = rlStruct
+	settings.Extensions.Configs[constants.RateLimitExtensionName] = rlStruct
 
 	_, err = settingsClient.Write(settings, clients.WriteOpts{OverwriteExisting: true})
 	return err

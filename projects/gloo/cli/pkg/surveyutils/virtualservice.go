@@ -17,22 +17,17 @@ func AddVirtualServiceFlagsInteractive(vs *options.InputVirtualService) error {
 		return err
 	}
 
-	return nil
-}
-
-func AddVirtualServiceFlagsInteractive(opts *options.ExtraOptions) error {
-
-	if err := rateLimitingSurvey(&opts.RateLimit); err != nil {
+	if err := rateLimitingSurvey(&vs.RateLimit); err != nil {
 		return err
 	}
-	if err := oidcSurvey(&opts.OIDCAuth); err != nil {
+	if err := oidcSurvey(&vs.OIDCAuth); err != nil {
 		return err
 	}
-	if err := apiKeySurvey(&opts.ApiKeyAuth); err != nil {
+	if err := apiKeySurvey(&vs.ApiKeyAuth); err != nil {
 		return err
 	}
 
-	if err := opaSurvey(&opts.OpaAuth); err != nil {
+	if err := opaSurvey(&vs.OpaAuth); err != nil {
 		return err
 	}
 

@@ -50,7 +50,7 @@ func RootCmd(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.
 	flagutils.AddMetadataFlags(cmd.PersistentFlags(), &opts.Metadata)
 	flagutils.AddDryRunFlag(cmd.PersistentFlags(), &opts.Create.DryRun)
 
-	cmd.AddCommand(VirtualService(opts))
+	cmd.AddCommand(VSCreate(opts))
 	cmd.AddCommand(Upstream(opts))
 	cmd.AddCommand(UpstreamGroup(opts))
 	cmd.AddCommand(secret.CreateCmd(opts))

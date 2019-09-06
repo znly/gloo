@@ -2,18 +2,18 @@ package virtualservice
 
 import (
 	"fmt"
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/constants"
 
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	editOptions "github.com/solo-io/gloo/projects/gloo/cli/pkg/cmd/edit/options"
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/cmdutils"
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/helpers"
 	gloov1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1"
 	ratelimitpb "github.com/solo-io/gloo/projects/gloo/pkg/api/v1/enterprise/plugins/ratelimit"
 	"github.com/solo-io/gloo/projects/gloo/pkg/plugins/utils"
 	"github.com/solo-io/go-utils/protoutils"
 	"github.com/solo-io/solo-kit/pkg/api/v1/clients"
-	"github.com/solo-io/gloo/projects/gloo/cli/pkg/cmdutils"
-	"github.com/solo-io/gloo/projects/gloo/pkg/plugins/ratelimit"
 
 	"github.com/solo-io/go-utils/cliutils"
 	"github.com/spf13/cobra"
@@ -53,7 +53,7 @@ func editVhost(opts *editOptions.EditOptions) error {
 	}
 
 	ratelimitExtension := new(ratelimitpb.RateLimitVhostExtension)
-	err = utils.UnmarshalExtension(vs.VirtualHost.VirtualHostPlugins, ratelimit.EnvoyExtensionName, ratelimitExtension)
+	err = utils.UnmarshalExtension(vs.VirtualHost.VirtualHostPlugins, constants.EnvoyRateLimitExtensionName, ratelimitExtension)
 	if err != nil {
 		if err != utils.NotFoundError {
 			return err
@@ -82,7 +82,7 @@ func editVhost(opts *editOptions.EditOptions) error {
 	if err != nil {
 		return err
 	}
-	vs.VirtualHost.VirtualHostPlugins.Extensions.Configs[ratelimit.EnvoyExtensionName] = extStruct
+	vs.VirtualHost.VirtualHostPlugins.Extensions.Configs[constants.EnvoyRateLimitExtensionName] = extStruct
 
 	_, err = vsClient.Write(vs, clients.WriteOpts{OverwriteExisting: true})
 	return err

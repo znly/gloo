@@ -21,11 +21,6 @@ import (
 	"github.com/solo-io/solo-kit/pkg/api/v1/clients"
 	"github.com/solo-io/solo-kit/pkg/api/v1/resources/core"
 	"github.com/solo-io/solo-kit/pkg/errors"
-	optionsExt "github.com/solo-io/gloo/projects/gloo/cli/pkg/cmd/options"
-	flagutilsExt "github.com/solo-io/gloo/projects/gloo/cli/pkg/flagutils"
-	surveyutilsExt "github.com/solo-io/gloo/projects/gloo/cli/pkg/surveyutils"
-	extauth2 "github.com/solo-io/gloo/projects/gloo/pkg/plugins/extauth"
-	ratelimit2 "github.com/solo-io/gloo/projects/gloo/pkg/plugins/ratelimit"
 	"github.com/spf13/cobra"
 )
 
@@ -44,9 +39,6 @@ var (
 
 func VSCreate(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
 
-	optsExt := &optionsExt.ExtraOptions{}
-	optsExt.OIDCAuth.ClientSecretRef = new(core.ResourceRef)
-
 	cmd := &cobra.Command{
 		// Use command constants to aid with replacement.
 		Use:     constants.VIRTUAL_SERVICE_COMMAND.Use,
@@ -62,9 +54,6 @@ func VSCreate(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra
 				if err := surveyutils.AddVirtualServiceFlagsInteractive(&opts.Create.VirtualService); err != nil {
 					return err
 				}
-				if err := surveyutilsExt.AddVirtualServiceFlagsInteractive(optsExt); err != nil {
-					return err
-				}
 			}
 			err := argsutils.MetadataArgsParse(opts, args)
 			if err != nil {
@@ -74,21 +63,20 @@ func VSCreate(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return createVirtualService(opts, optsExt, args)
+			return createVirtualService(opts, args)
 		},
 	}
 
 	pflags := cmd.PersistentFlags()
 	flagutils.AddMetadataFlags(pflags, &opts.Metadata)
 	flagutils.AddVirtualServiceFlags(pflags, &opts.Create.VirtualService)
-	flagutilsExt.AddVirtualServiceFlags(pflags, optsExt)
 	cliutils.ApplyOptions(cmd, optionsFunc)
 
 	return cmd
 }
 
-func createVirtualService(opts *options.Options, optsExt *optionsExt.ExtraOptions, args []string) error {
-	vs, err := virtualServiceFromOpts(opts.Metadata, opts.Create.VirtualService, *optsExt)
+func createVirtualService(opts *options.Options, args []string) error {
+	vs, err := virtualServiceFromOpts(opts.Metadata, opts.Create.VirtualService)
 	if err != nil {
 		return err
 	}
@@ -107,7 +95,7 @@ func createVirtualService(opts *options.Options, optsExt *optionsExt.ExtraOption
 }
 
 // TODO: dedupe with Gloo
-func virtualServiceFromOpts(meta core.Metadata, input options.InputVirtualService, extopts optionsExt.ExtraOptions) (*v1.VirtualService, error) {
+func virtualServiceFromOpts(meta core.Metadata, input options.InputVirtualService) (*v1.VirtualService, error) {
 	if len(input.Domains) == 0 {
 		input.Domains = defaultDomains
 	}
@@ -122,7 +110,7 @@ func virtualServiceFromOpts(meta core.Metadata, input options.InputVirtualServic
 		},
 		DisplayName: displayName,
 	}
-	rl := extopts.RateLimit
+	rl := input.RateLimit
 	if rl.Enable {
 		if vs.VirtualHost.VirtualHostPlugins == nil {
 			vs.VirtualHost.VirtualHostPlugins = &gloov1.VirtualHostPlugins{}
@@ -147,17 +135,17 @@ func virtualServiceFromOpts(meta core.Metadata, input options.InputVirtualServic
 		if vs.VirtualHost.VirtualHostPlugins.Extensions.Configs == nil {
 			vs.VirtualHost.VirtualHostPlugins.Extensions.Configs = make(map[string]*types.Struct)
 		}
-		vs.VirtualHost.VirtualHostPlugins.Extensions.Configs[ratelimit2.ExtensionName] = ingressRateLimitStruct
+		vs.VirtualHost.VirtualHostPlugins.Extensions.Configs[constants.RateLimitExtensionName] = ingressRateLimitStruct
 	}
 
-	return vs, authFromOpts(vs, extopts)
+	return vs, authFromOpts(vs, input)
 }
 
-func authFromOpts(vs *v1.VirtualService, extopts optionsExt.ExtraOptions) error {
+func authFromOpts(vs *v1.VirtualService, input options.InputVirtualService) error {
 
 	var vhostAuth *extauth.VhostExtension
 
-	oidc := extopts.OIDCAuth
+	oidc := input.OIDCAuth
 	if oidc.Enable {
 		if oidc.AppUrl == "" {
 			return errors.Errorf("invalid app url specified: %v", oidc.AppUrl)
@@ -190,7 +178,7 @@ func authFromOpts(vs *v1.VirtualService, extopts optionsExt.ExtraOptions) error 
 		}
 	}
 
-	apiKey := extopts.ApiKeyAuth
+	apiKey := input.ApiKeyAuth
 	if apiKey.Enable {
 		var secretRefs []*core.ResourceRef
 		if apiKey.SecretNamespace != "" && apiKey.SecretName != "" {
@@ -223,7 +211,7 @@ func authFromOpts(vs *v1.VirtualService, extopts optionsExt.ExtraOptions) error 
 		}
 	}
 
-	opauth := extopts.OpaAuth
+	opauth := input.OpaAuth
 	if opauth.Enable {
 
 		var modules []*core.ResourceRef
@@ -274,7 +262,7 @@ func authFromOpts(vs *v1.VirtualService, extopts optionsExt.ExtraOptions) error 
 		if vs.VirtualHost.VirtualHostPlugins.Extensions.Configs == nil {
 			vs.VirtualHost.VirtualHostPlugins.Extensions.Configs = make(map[string]*types.Struct)
 		}
-		vs.VirtualHost.VirtualHostPlugins.Extensions.Configs[extauth2.ExtensionName] = vhostAuthStruct
+		vs.VirtualHost.VirtualHostPlugins.Extensions.Configs[constants.ExtAuthExtensionName] = vhostAuthStruct
 
 	}
 
