@@ -2,6 +2,7 @@ package create_test
 
 import (
 	"fmt"
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/constants"
 
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/cmd/create"
 
@@ -11,12 +12,11 @@ import (
 
 	"github.com/solo-io/gloo/pkg/cliutil/testutil"
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/helpers"
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/testutils"
 	extauthpb "github.com/solo-io/gloo/projects/gloo/pkg/api/v1/enterprise/plugins/extauth"
 	pluginutils "github.com/solo-io/gloo/projects/gloo/pkg/plugins/utils"
 	"github.com/solo-io/solo-kit/pkg/api/v1/clients"
 	"github.com/solo-io/solo-kit/pkg/api/v1/resources/core"
-	"github.com/solo-io/gloo/projects/gloo/cli/pkg/testutils"
-	"github.com/solo-io/gloo/projects/gloo/pkg/plugins/extauth"
 )
 
 var _ = Describe("Virtualservice", func() {
@@ -31,7 +31,7 @@ var _ = Describe("Virtualservice", func() {
 		Expect(vs.Metadata.Name).To(Equal("vs1"))
 
 		var extension extauthpb.VhostExtension
-		err = pluginutils.UnmarshalExtension(vs.GetVirtualHost().GetVirtualHostPlugins(), extauth.ExtensionName, &extension)
+		err = pluginutils.UnmarshalExtension(vs.GetVirtualHost().GetVirtualHostPlugins(), constants.ExtAuthExtensionName, &extension)
 		Expect(err).NotTo(HaveOccurred())
 		return extension
 	}
@@ -53,7 +53,7 @@ var _ = Describe("Virtualservice", func() {
 
 	DescribeTable("should create oidc vhost",
 		func(cmd string, expected extauthpb.OAuth) {
-			err := testutils.GlooctlEE(cmd)
+			err := testutils.Glooctl(cmd)
 			Expect(err).NotTo(HaveOccurred())
 			oidc := getOIDCConfig()
 			Expect(*oidc).To(Equal(expected))
@@ -104,7 +104,7 @@ var _ = Describe("Virtualservice", func() {
 
 	DescribeTable("should create apikey vhost",
 		func(cmd string, expected extauthpb.ApiKeyAuth) {
-			err := testutils.GlooctlEE(cmd)
+			err := testutils.Glooctl(cmd)
 			Expect(err).NotTo(HaveOccurred())
 			apiKey := getApiKeyConfig()
 			Expect(*apiKey).To(Equal(expected))
@@ -142,13 +142,13 @@ var _ = Describe("Virtualservice", func() {
 
 	Context("ApiKey virtual service errors", func() {
 		It("throws error if namespace provided and name omitted ", func() {
-			_, err := testutils.GlooctlEEOut("create vs --name vs1 --enable-apikey-auth " +
+			_, err := testutils.GlooctlOut("create vs --name vs1 --enable-apikey-auth " +
 				"--apikey-secret-namespace ns1")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal(create.ProvideNamespaceAndNameError("ns1", "").Error()))
 		})
 		It("throws error if name provided and namespace omitted ", func() {
-			_, err := testutils.GlooctlEEOut("create vs --name vs1 --enable-apikey-auth " +
+			_, err := testutils.GlooctlOut("create vs --name vs1 --enable-apikey-auth " +
 				"--apikey-secret-name s1")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal(create.ProvideNamespaceAndNameError("", "s1").Error()))
@@ -157,7 +157,7 @@ var _ = Describe("Virtualservice", func() {
 
 	DescribeTable("should create opa vhost",
 		func(cmd string, expected extauthpb.OpaAuth) {
-			err := testutils.GlooctlEE(cmd)
+			err := testutils.Glooctl(cmd)
 			Expect(err).NotTo(HaveOccurred())
 			opa := getOpaConfig()
 			Expect(*opa).To(Equal(expected))
@@ -176,7 +176,7 @@ var _ = Describe("Virtualservice", func() {
 	)
 
 	It("should create opa after oidc", func() {
-		err := testutils.GlooctlEE("create vs --name vs1 " +
+		err := testutils.Glooctl("create vs --name vs1 " +
 			"--enable-oidc-auth --oidc-auth-client-id 1 " +
 			"--oidc-auth-app-url http://app.example.com --oidc-auth-client-secret-name fake " +
 			"--oidc-auth-client-secret-namespace fakens --oidc-auth-issuer-url http://issuer.example.com " +
@@ -200,7 +200,7 @@ var _ = Describe("Virtualservice", func() {
 
 	Context("OPA virtual service errors", func() {
 		It("throws error if no query provided ", func() {
-			_, err := testutils.GlooctlEEOut("create vs --name vs1 --enable-opa-auth")
+			_, err := testutils.GlooctlOut("create vs --name vs1 --enable-opa-auth")
 			Expect(err).To(MatchError(create.EmptyQueryError))
 		})
 	})
@@ -227,7 +227,7 @@ var _ = Describe("Virtualservice", func() {
 
 				c.ExpectEOF()
 			}, func() {
-				err := testutils.GlooctlEE("create vs -i")
+				err := testutils.Glooctl("create vs -i")
 				Expect(err).NotTo(HaveOccurred())
 				_, err = helpers.MustVirtualServiceClient().Read("gloo-system", "default", clients.ReadOpts{})
 				Expect(err).NotTo(HaveOccurred())
@@ -272,7 +272,7 @@ var _ = Describe("Virtualservice", func() {
 
 				c.ExpectEOF()
 			}, func() {
-				err := testutils.GlooctlEE("create vs -i")
+				err := testutils.Glooctl("create vs -i")
 				Expect(err).NotTo(HaveOccurred())
 
 				oidc := getOIDCConfig()
@@ -322,7 +322,7 @@ var _ = Describe("Virtualservice", func() {
 
 				c.ExpectEOF()
 			}, func() {
-				err := testutils.GlooctlEE("create vs -i")
+				err := testutils.Glooctl("create vs -i")
 				Expect(err).NotTo(HaveOccurred())
 
 				apiKey := getApiKeyConfig()
@@ -368,7 +368,7 @@ var _ = Describe("Virtualservice", func() {
 
 				c.ExpectEOF()
 			}, func() {
-				err := testutils.GlooctlEE("create vs -i")
+				err := testutils.Glooctl("create vs -i")
 				Expect(err).NotTo(HaveOccurred())
 
 				opa := getOpaConfig()
@@ -390,7 +390,7 @@ var _ = Describe("Virtualservice", func() {
 
 	var _ = Describe("dry-run", func() {
 		It("can print as kube yaml in dry run", func() {
-			out, err := testutils.GlooctlEEOut("create virtualservice kube --dry-run --name vs --domains foo.bar,baz.qux")
+			out, err := testutils.GlooctlOut("create virtualservice kube --dry-run --name vs --domains foo.bar,baz.qux")
 			Expect(err).NotTo(HaveOccurred())
 			fmt.Print(out)
 			Expect(out).To(Equal(`apiVersion: gateway.solo.io/v1
@@ -410,7 +410,7 @@ status: {}
 		})
 
 		It("can print as solo-kit yaml in dry run", func() {
-			out, err := testutils.GlooctlEEOut("create virtualservice kube --dry-run -oyaml --name vs --domains foo.bar,baz.qux")
+			out, err := testutils.GlooctlOut("create virtualservice kube --dry-run -oyaml --name vs --domains foo.bar,baz.qux")
 			Expect(err).NotTo(HaveOccurred())
 			fmt.Print(out)
 			Expect(out).To(Equal(`---
