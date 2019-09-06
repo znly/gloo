@@ -39,6 +39,8 @@ var (
 
 func VSCreate(opts *options.Options, optionsFunc ...cliutils.OptionsFunc) *cobra.Command {
 
+	opts.Create.VirtualService.OIDCAuth.ClientSecretRef = new(core.ResourceRef)
+	
 	cmd := &cobra.Command{
 		// Use command constants to aid with replacement.
 		Use:     constants.VIRTUAL_SERVICE_COMMAND.Use,
