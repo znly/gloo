@@ -1,6 +1,7 @@
 package ratelimit_test
 
 import (
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/constants"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -8,14 +9,13 @@ import (
 
 	"github.com/solo-io/gloo/pkg/cliutil/testutil"
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/helpers"
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/testutils"
 	gloov1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1"
 	ratelimitpb "github.com/solo-io/gloo/projects/gloo/pkg/api/v1/enterprise/plugins/ratelimit"
 	static_plugin_gloo "github.com/solo-io/gloo/projects/gloo/pkg/api/v1/plugins/static"
 	"github.com/solo-io/gloo/projects/gloo/pkg/plugins/utils"
 	"github.com/solo-io/solo-kit/pkg/api/v1/clients"
 	"github.com/solo-io/solo-kit/pkg/api/v1/resources/core"
-	"github.com/solo-io/gloo/projects/gloo/cli/pkg/testutils"
-	"github.com/solo-io/gloo/projects/gloo/pkg/plugins/ratelimit"
 )
 
 var _ = Describe("Ratelimit", func() {
@@ -48,12 +48,12 @@ var _ = Describe("Ratelimit", func() {
 		ExpectWithOffset(2, err).NotTo(HaveOccurred())
 
 		rlSettings = ratelimitpb.Settings{}
-		err = utils.UnmarshalExtension(settings, ratelimit.ExtensionName, &rlSettings)
+		err = utils.UnmarshalExtension(settings, constants.RateLimitExtensionName, &rlSettings)
 		ExpectWithOffset(2, err).NotTo(HaveOccurred())
 	}
 
 	Run := func(cmd string) {
-		err := testutils.GlooctlEE(cmd)
+		err := testutils.Glooctl(cmd)
 		ExpectWithOffset(1, err).NotTo(HaveOccurred())
 		ReadSettings()
 	}
@@ -131,7 +131,7 @@ var _ = Describe("Ratelimit", func() {
 				c.SendLine("y")
 				c.ExpectEOF()
 			}, func() {
-				err := testutils.GlooctlEE("edit settings ratelimit -i")
+				err := testutils.Glooctl("edit settings ratelimit -i")
 				Expect(err).NotTo(HaveOccurred())
 				ReadSettings()
 				second := time.Second

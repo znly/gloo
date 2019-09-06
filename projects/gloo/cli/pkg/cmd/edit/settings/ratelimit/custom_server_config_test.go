@@ -1,20 +1,20 @@
 package ratelimit_test
 
 import (
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/constants"
 	"io"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/cmdutils"
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/helpers"
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/testutils"
 	gloov1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1"
 	ratelimitpb "github.com/solo-io/gloo/projects/gloo/pkg/api/v1/enterprise/plugins/ratelimit"
 	"github.com/solo-io/gloo/projects/gloo/pkg/plugins/utils"
 	"github.com/solo-io/solo-kit/pkg/api/v1/clients"
 	"github.com/solo-io/solo-kit/pkg/api/v1/resources/core"
-	"github.com/solo-io/gloo/projects/gloo/cli/pkg/cmdutils"
-	"github.com/solo-io/gloo/projects/gloo/cli/pkg/testutils"
-	"github.com/solo-io/gloo/projects/gloo/pkg/plugins/ratelimit"
 )
 
 var _ = Describe("CustomServerConfig", func() {
@@ -45,7 +45,7 @@ var _ = Describe("CustomServerConfig", func() {
 			return []byte(yaml), "", nil
 		}
 
-		return testutils.GlooctlEE("edit settings --name default --namespace gloo-system ratelimit custom-server-config")
+		return testutils.Glooctl("edit settings --name default --namespace gloo-system ratelimit custom-server-config")
 	}
 
 	Validate := func(yaml string) *ratelimitpb.EnvoySettings_RateLimitCustomConfig {
@@ -56,7 +56,7 @@ var _ = Describe("CustomServerConfig", func() {
 		ExpectWithOffset(1, err).NotTo(HaveOccurred())
 
 		var rlSettings ratelimitpb.EnvoySettings
-		err = utils.UnmarshalExtension(settings, ratelimit.EnvoyExtensionName, &rlSettings)
+		err = utils.UnmarshalExtension(settings, constants.EnvoyRateLimitExtensionName, &rlSettings)
 		ExpectWithOffset(1, err).NotTo(HaveOccurred())
 
 		return rlSettings.CustomConfig

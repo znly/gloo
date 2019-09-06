@@ -4,17 +4,17 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/constants"
 
 	"github.com/solo-io/gloo/pkg/cliutil/testutil"
 	gatewayv1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1"
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/helpers"
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/testutils"
 	v1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1"
 	extauthpb "github.com/solo-io/gloo/projects/gloo/pkg/api/v1/enterprise/plugins/extauth"
 	"github.com/solo-io/gloo/projects/gloo/pkg/plugins/utils"
 	"github.com/solo-io/solo-kit/pkg/api/v1/clients"
 	"github.com/solo-io/solo-kit/pkg/api/v1/resources/core"
-	"github.com/solo-io/gloo/projects/gloo/cli/pkg/testutils"
-	"github.com/solo-io/gloo/projects/gloo/pkg/plugins/extauth"
 )
 
 var _ = Describe("Extauth", func() {
@@ -53,7 +53,7 @@ var _ = Describe("Extauth", func() {
 		vsvc, err = vsClient.Read(vsvc.Metadata.Namespace, vsvc.Metadata.Name, clients.ReadOpts{})
 		Expect(err).NotTo(HaveOccurred())
 
-		err = utils.UnmarshalExtension(vsvc.VirtualHost.Routes[index].RoutePlugins, extauth.ExtensionName, &extAuthRouteExt)
+		err = utils.UnmarshalExtension(vsvc.VirtualHost.Routes[index].RoutePlugins, constants.ExtAuthExtensionName, &extAuthRouteExt)
 		if err != nil {
 			if err == utils.NotFoundError {
 				return nil
@@ -67,7 +67,7 @@ var _ = Describe("Extauth", func() {
 		DescribeTable("should edit extauth config",
 			func(cmd string, index int, expected *extauthpb.RouteExtension) {
 
-				err := testutils.GlooctlEE(cmd)
+				err := testutils.Glooctl(cmd)
 				Expect(err).NotTo(HaveOccurred())
 
 				extension := extAuthExtension(index)
@@ -104,7 +104,7 @@ var _ = Describe("Extauth", func() {
 				c.SendLine("")
 				c.ExpectEOF()
 			}, func() {
-				err := testutils.GlooctlEE("edit route externalauth -i")
+				err := testutils.Glooctl("edit route externalauth -i")
 				Expect(err).NotTo(HaveOccurred())
 				extension := extAuthExtension(1)
 				Expect(extension).To(Equal(&extauthpb.RouteExtension{
@@ -118,7 +118,7 @@ var _ = Describe("Extauth", func() {
 	Context("Errors", func() {
 		It("should error with wrong resource version", func() {
 			badrv := vsvc.Metadata.ResourceVersion + "a"
-			err := testutils.GlooctlEE("edit route externalauth --name vs --namespace gloo-system --index 1 --disable=true --resource-version=" + badrv)
+			err := testutils.Glooctl("edit route externalauth --name vs --namespace gloo-system --index 1 --disable=true --resource-version=" + badrv)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("conflict - resource version does not match"))
 		})

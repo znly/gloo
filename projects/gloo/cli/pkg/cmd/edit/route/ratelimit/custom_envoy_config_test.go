@@ -1,21 +1,21 @@
 package ratelimit_test
 
 import (
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/constants"
 	"io"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	gatewayv1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1"
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/cmdutils"
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/helpers"
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/testutils"
 	v1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1"
 	ratelimitpb "github.com/solo-io/gloo/projects/gloo/pkg/api/v1/enterprise/plugins/ratelimit"
 	"github.com/solo-io/gloo/projects/gloo/pkg/plugins/utils"
 	"github.com/solo-io/solo-kit/pkg/api/v1/clients"
 	"github.com/solo-io/solo-kit/pkg/api/v1/resources/core"
-	"github.com/solo-io/gloo/projects/gloo/cli/pkg/cmdutils"
-	"github.com/solo-io/gloo/projects/gloo/cli/pkg/testutils"
-	"github.com/solo-io/gloo/projects/gloo/pkg/plugins/ratelimit"
 )
 
 var _ = Describe("CustomEnvoyConfig", func() {
@@ -51,7 +51,7 @@ var _ = Describe("CustomEnvoyConfig", func() {
 		vsvc, err = vsClient.Read(vsvc.Metadata.Namespace, vsvc.Metadata.Name, clients.ReadOpts{})
 		Expect(err).NotTo(HaveOccurred())
 
-		err = utils.UnmarshalExtension(vsvc.VirtualHost.Routes[index].RoutePlugins, ratelimit.EnvoyExtensionName, &routeExt)
+		err = utils.UnmarshalExtension(vsvc.VirtualHost.Routes[index].RoutePlugins, constants.EnvoyRateLimitExtensionName, &routeExt)
 		if err != nil {
 			Expect(err).NotTo(HaveOccurred())
 		}
@@ -69,7 +69,7 @@ rate_limits:
 			return []byte(b), "", nil
 		}
 
-		err := testutils.GlooctlEE("edit route --name vs --namespace gloo-system --index 0 ratelimit custom-envoy-config")
+		err := testutils.Glooctl("edit route --name vs --namespace gloo-system --index 0 ratelimit custom-envoy-config")
 		Expect(err).NotTo(HaveOccurred())
 
 		ext := rateLimitExtension(0)

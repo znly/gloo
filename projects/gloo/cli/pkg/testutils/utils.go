@@ -2,6 +2,10 @@ package testutils
 
 import (
 	"bytes"
+	"github.com/gogo/protobuf/types"
+	v1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1"
+	"github.com/solo-io/gloo/projects/gloo/pkg/defaults"
+	"github.com/solo-io/solo-kit/pkg/api/v1/resources/core"
 	"io"
 	"os"
 	"os/exec"
@@ -68,4 +72,23 @@ func Make(dir, args string) error {
 		return errors.Errorf("make failed with err: %s", out)
 	}
 	return nil
+}
+
+func GetTestSettings() *v1.Settings {
+	return &v1.Settings{
+		Metadata: core.Metadata{
+			Name:      "default",
+			Namespace: defaults.GlooSystem,
+		},
+		BindAddr:        "test:80",
+		ConfigSource:    &v1.Settings_DirectoryConfigSource{},
+		DevMode:         true,
+		SecretSource:    &v1.Settings_KubernetesSecretSource{},
+		WatchNamespaces: []string{"default"},
+		Extensions: &v1.Extensions{
+			Configs: map[string]*types.Struct{
+				"someotherextension": {},
+			},
+		},
+	}
 }

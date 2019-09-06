@@ -4,17 +4,17 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/constants"
 
 	"github.com/solo-io/gloo/pkg/cliutil/testutil"
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/helpers"
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/testutils"
 	gloov1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1"
 	extauthpb "github.com/solo-io/gloo/projects/gloo/pkg/api/v1/enterprise/plugins/extauth"
 	static_plugin_gloo "github.com/solo-io/gloo/projects/gloo/pkg/api/v1/plugins/static"
 	"github.com/solo-io/gloo/projects/gloo/pkg/plugins/utils"
 	"github.com/solo-io/solo-kit/pkg/api/v1/clients"
 	"github.com/solo-io/solo-kit/pkg/api/v1/resources/core"
-	"github.com/solo-io/gloo/projects/gloo/cli/pkg/testutils"
-	"github.com/solo-io/gloo/projects/gloo/pkg/plugins/extauth"
 )
 
 var _ = Describe("Extauth", func() {
@@ -38,7 +38,7 @@ var _ = Describe("Extauth", func() {
 		settings, err = settingsClient.Read(settings.Metadata.Namespace, settings.Metadata.Name, clients.ReadOpts{})
 		Expect(err).NotTo(HaveOccurred())
 
-		err = utils.UnmarshalExtension(settings, extauth.ExtensionName, &extAuthSettings)
+		err = utils.UnmarshalExtension(settings, constants.ExtAuthExtensionName, &extAuthSettings)
 		if err != nil {
 			if err == utils.NotFoundError {
 				return nil
@@ -53,14 +53,14 @@ var _ = Describe("Extauth", func() {
 
 			originalSettings := *settings
 
-			err := testutils.GlooctlEE(cmd)
+			err := testutils.Glooctl(cmd)
 			Expect(err).NotTo(HaveOccurred())
 
 			extension := extAuthExtension()
 			Expect(extension).To(Equal(expected))
 
 			// check that the rest of the settings were not changed.
-			delete(settings.Extensions.Configs, extauth.ExtensionName)
+			delete(settings.Extensions.Configs, constants.ExtAuthExtensionName)
 			settings.Metadata.ResourceVersion = ""
 			Expect(*settings).To(Equal(originalSettings))
 
@@ -124,7 +124,7 @@ var _ = Describe("Extauth", func() {
 				c.SendLine("gloo-system")
 				c.ExpectEOF()
 			}, func() {
-				err := testutils.GlooctlEE("edit settings externalauth -i")
+				err := testutils.Glooctl("edit settings externalauth -i")
 				Expect(err).NotTo(HaveOccurred())
 				extension := extAuthExtension()
 				Expect(extension).To(Equal(&extauthpb.Settings{
