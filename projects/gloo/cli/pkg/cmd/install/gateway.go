@@ -2,6 +2,8 @@ package install
 
 import (
 	"fmt"
+	"github.com/solo-io/gloo/pkg/cliutil"
+	"os"
 
 	"github.com/pkg/errors"
 	"github.com/solo-io/gloo/pkg/cliutil/install"
@@ -29,6 +31,13 @@ func gatewayCmd(opts *options.Options) *cobra.Command {
 		Long:   "requires kubectl to be installed",
 		PreRun: setVerboseMode(opts),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if opts.Install.Enterprise {
+				if err := installGlooE(opts); err != nil {
+					return errors.Wrapf(err, "installing gloo enterprise in gateway mode")
+				}
+				return nil
+			}
+
 			if err := installGloo(opts, constants.GatewayValuesFileName); err != nil {
 				return errors.Wrapf(err, "installing gloo in gateway mode")
 			}
@@ -40,8 +49,24 @@ func gatewayCmd(opts *options.Options) *cobra.Command {
 	return cmd
 }
 
-func installGlooE(cmd *cobra.Command, args []string) error {
-	
+// Entry point for all three GLoo installation commands
+func installGlooE(opts *options.Options) error {
+	if !opts.Install.DryRun {
+		fmt.Printf("Starting Gloo Enterprise installation...\n")
+	}
+	spec, err := GetEnterpriseInstallSpec(opts)
+	if err != nil {
+		return err
+	}
+	kubeInstallClient := DefaultGlooKubeInstallClient{}
+	if err := InstallGloo(opts, *spec, &kubeInstallClient); err != nil {
+		fmt.Fprintf(os.Stderr, "\nGloo failed to install! Detailed logs available at %s.\n", cliutil.GetLogsPath())
+		return err
+	}
+	if !opts.Install.DryRun {
+		fmt.Printf("\nGloo Enterprise was successfully installed!\n")
+	}
+	return nil
 }
 
 // enterprise
