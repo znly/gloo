@@ -3,6 +3,7 @@ package install
 import (
 	"fmt"
 	"github.com/solo-io/gloo/pkg/cliutil"
+	"github.com/solo-io/gloo/pkg/version"
 	"os"
 
 	"github.com/pkg/errors"
@@ -71,10 +72,7 @@ func installGlooE(opts *options.Options) error {
 
 // enterprise
 func GetEnterpriseInstallSpec(opts *options.Options) (*GlooInstallSpec, error) {
-	glooEVersion, err := getGlooVersion(opts)
-	if err != nil {
-		return nil, err
-	}
+	glooEVersion := version.EnterpriseTag
 
 	// Get location of Gloo helm chart
 	helmChartArchiveUri := fmt.Sprintf(GlooEHelmRepoTemplate, glooEVersion)
