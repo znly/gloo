@@ -40,6 +40,10 @@ func gatewayCmd(opts *options.Options) *cobra.Command {
 	return cmd
 }
 
+func installGlooE(cmd *cobra.Command, args []string) error {
+	
+}
+
 // enterprise
 func GetEnterpriseInstallSpec(opts *options.Options) (*GlooInstallSpec, error) {
 	glooEVersion, err := getGlooVersion(opts)
