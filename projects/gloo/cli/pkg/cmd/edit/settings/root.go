@@ -23,7 +23,7 @@ func RootCmd(opts *editOptions.EditOptions, optionsFunc ...cliutils.OptionsFunc)
 
 	// TODO(yuval-k):
 	// I would like the default name to be default, but currently the route subcommand will override default above.
-	// to fix that we will need a significat refactor or the CLI. so i'll avoid that for now.
+	// to fix that we will need a significant refactor or the CLI. so i'll avoid that for now.
 	//   pflags.StringVar(&opts.Metadata.Name, "name", "default", "name of the resource to read or write")
 	//   flagutils.AddNamespaceFlag(pflags, &opts.Metadata.Namespace)
 	flagutils.AddMetadataFlags(pflags, &opts.Metadata)
