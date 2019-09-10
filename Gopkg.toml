@@ -28,11 +28,11 @@
 
 [[constraint]]
   name = "github.com/solo-io/solo-kit"
-  version = "0.10.14"
+  version = "0.10.16"
 
 [[override]]
   name = "github.com/solo-io/go-utils"
-  version = "0.9.20"
+  version = "0.10.0"
 
 [[constraint]]
   name = "github.com/hashicorp/consul"
@@ -89,6 +89,11 @@
 [[override]]
   name = "golang.org/x/net"
   revision = "aaf60122140d3fcf75376d319f0554393160eb50"
+
+# added to support knative v0.8.0
+[[override]]
+  name = "golang.org/x/xerrors"
+  revision = "a985d3407aa71f30cf86696ee0a2f409709f22e1"
 
 [[override]]
   name = "k8s.io/klog"

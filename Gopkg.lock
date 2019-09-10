@@ -285,7 +285,7 @@
   version = "v1.12.0"
 
 [[projects]]
-  digest = "1:f74866f96499508fd2a1993bf3cb272ecb7f3da0ca1bbc20fbf25f7d848ad73e"
+  digest = "1:804fc6d7fa7cbe63ab06204ddcd7dc9aa316a246c362ee41f15200e1343fd544"
   name = "github.com/envoyproxy/go-control-plane"
   packages = [
     "envoy/api/v2",
@@ -307,6 +307,8 @@
     "envoy/config/metrics/v2",
     "envoy/config/overload/v2alpha",
     "envoy/config/trace/v2",
+    "envoy/data/accesslog/v2",
+    "envoy/service/accesslog/v2",
     "envoy/service/discovery/v2",
     "envoy/type",
     "envoy/type/matcher",
@@ -961,6 +963,14 @@
   revision = "95032a82bc518f77982ea72343cc1ade730072f0"
 
 [[projects]]
+  digest = "1:fd9bea48bbc5bba66d9891c72af7255fbebecdff845c37c679406174ece5ca1b"
+  name = "github.com/kelseyhightower/envconfig"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "0b417c4ec4a8a82eecc22a1459a504aa55163d61"
+  version = "v1.4.0"
+
+[[projects]]
   digest = "1:ae5f4d0779a45e2cb3075d8b3ece6c623e171407f4aac83521392ff06d188871"
   name = "github.com/kevinburke/ssh_config"
   packages = ["."]
@@ -1324,7 +1334,7 @@
   version = "0.1.0"
 
 [[projects]]
-  digest = "1:67036657b73d767f10b05994c6c658e7b3f6e1d6dfa880a8b74985cdc56db6a3"
+  digest = "1:dd6e22af3ef48089103837a2eb782f3f3a7cfe1f307ae1ef92f107bcd7e1158c"
   name = "github.com/solo-io/go-utils"
   packages = [
     "changelogutils",
@@ -1338,6 +1348,7 @@
     "errutils",
     "githubutils",
     "hashutils",
+    "healthchecker",
     "installutils/helmchart",
     "installutils/kuberesource",
     "kubeinstallutils",
@@ -1360,11 +1371,11 @@
     "vfsutils",
   ]
   pruneopts = "UT"
-  revision = "08035688c449b622f94aacb89d759f672cc31905"
-  version = "v0.9.20"
+  revision = "075c4b07de59a9b7b20475b7eab02dcdc6a62d64"
+  version = "v0.10.0"
 
 [[projects]]
-  digest = "1:59e275b45ff5aa7eaf961237f8110bafff38e29bf904900e1acc57aac95e6475"
+  digest = "1:082c3354d1fc17d293495ec1e582f16acac6cedaf78da80049b52a1fda9ef792"
   name = "github.com/solo-io/solo-kit"
   packages = [
     "api/external/kubernetes/configmap",
@@ -1425,8 +1436,8 @@
     "test/setup",
   ]
   pruneopts = "UT"
-  revision = "516e34cf58adb6e4c674b7c95ef181c0ea43cb6a"
-  version = "v0.10.14"
+  revision = "b533affaeae86153ab0b21ce7a5131ecc9613728"
+  version = "v0.10.16"
 
 [[projects]]
   digest = "1:3e39bafd6c2f4bf3c76c3bfd16a2e09e016510ad5db90dc02b88e2f565d6d595"
@@ -1672,15 +1683,14 @@
   revision = "fbb02b2291d28baffd63558aa44b4b56f178d650"
 
 [[projects]]
-  branch = "master"
-  digest = "1:c44a77760372a998be8d4656e8d3c865f68735ec4cad1743a245903a58f64249"
+  digest = "1:7b5ce208ea2ca1f96322e6a5b616839fe49ea798648a013039f300475a1aadfc"
   name = "golang.org/x/xerrors"
   packages = [
     ".",
     "internal",
   ]
   pruneopts = "UT"
-  revision = "3ee3066db522c6628d440a3a91c4abdd7f5ef22f"
+  revision = "a985d3407aa71f30cf86696ee0a2f409709f22e1"
 
 [[projects]]
   digest = "1:d2a8db567a76203e3b41c1f632d86485ffd57f8e650a0d1b19d240671c2fddd7"
@@ -1713,7 +1723,7 @@
   revision = "02b4e95473316948020af0b7a4f0f22c73929b0e"
 
 [[projects]]
-  digest = "1:d51efa1a467f426c6c490a450f9e064ef27ca3181fc9cc960996664be3c1b80a"
+  digest = "1:50e6297746c3c45c16be8855886890382796b6941db6b7b6fbcd62fe75109a51"
   name = "google.golang.org/grpc"
   packages = [
     ".",
@@ -1726,6 +1736,8 @@
     "encoding",
     "encoding/proto",
     "grpclog",
+    "health",
+    "health/grpc_health_v1",
     "internal",
     "internal/backoff",
     "internal/channelz",
@@ -2536,10 +2548,13 @@
     "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2",
     "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/tcp_proxy/v2",
     "github.com/envoyproxy/go-control-plane/envoy/config/grpc_credential/v2alpha",
+    "github.com/envoyproxy/go-control-plane/envoy/data/accesslog/v2",
+    "github.com/envoyproxy/go-control-plane/envoy/service/accesslog/v2",
     "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v2",
     "github.com/envoyproxy/go-control-plane/envoy/type",
     "github.com/envoyproxy/go-control-plane/pkg/util",
     "github.com/envoyproxy/protoc-gen-validate/validate",
+    "github.com/fgrosse/zaptest",
     "github.com/ghodss/yaml",
     "github.com/go-openapi/loads",
     "github.com/go-openapi/spec",
@@ -2569,6 +2584,7 @@
     "github.com/jhump/protoreflect/desc",
     "github.com/jhump/protoreflect/grpcreflect",
     "github.com/k0kubun/pp",
+    "github.com/kelseyhightower/envconfig",
     "github.com/keybase/go-ps",
     "github.com/mitchellh/hashstructure",
     "github.com/olekukonko/tablewriter",
@@ -2594,6 +2610,7 @@
     "github.com/solo-io/go-utils/errutils",
     "github.com/solo-io/go-utils/githubutils",
     "github.com/solo-io/go-utils/hashutils",
+    "github.com/solo-io/go-utils/healthchecker",
     "github.com/solo-io/go-utils/installutils/helmchart",
     "github.com/solo-io/go-utils/kubeutils",
     "github.com/solo-io/go-utils/log",
@@ -2640,6 +2657,7 @@
     "github.com/solo-io/solo-kit/test/setup",
     "github.com/spf13/cobra",
     "github.com/spf13/pflag",
+    "go.opencensus.io/plugin/ocgrpc",
     "go.opencensus.io/stats",
     "go.opencensus.io/stats/view",
     "go.opencensus.io/tag",
@@ -2649,6 +2667,8 @@
     "google.golang.org/genproto/googleapis/api/annotations",
     "google.golang.org/grpc",
     "google.golang.org/grpc/codes",
+    "google.golang.org/grpc/health",
+    "google.golang.org/grpc/health/grpc_health_v1",
     "google.golang.org/grpc/reflection",
     "google.golang.org/grpc/reflection/grpc_reflection_v1alpha",
     "google.golang.org/grpc/status",
