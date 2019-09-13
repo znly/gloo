@@ -11,6 +11,6 @@ changelog:
 - type: FIX
   description: For both glooctl add and glooctl create, a --dry-run will output a kube-yaml file unless the --output flag overrides it.
   issueLink: https://github.com/solo-io/gloo/issues/907
-- type: FEATURE
+- type: NEW_FEATURE
   description: Add support for add route query parameter matching.
   issueLink: https://github.com/solo-io/gloo/issues/932
