@@ -17,3 +17,6 @@ docs/helm-values.md
 
 # ignore intermediate files that gomock sometimes generates
 **/gomock_reflect*
+
+# temporary docs coordination dir
+old_docs_temp_dir/

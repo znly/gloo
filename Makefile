@@ -440,6 +440,19 @@ ifeq ($(RELEASE),"true")
 		RELEASE=$(RELEASE)
 endif
 
+.PHONY: publish-v-20-docs
+publish-v-20-docs: gather-v-20-docs publish-docs
+
+OLD_DOCS_TEMP_DIR := "old_docs_temp_dir"
+.PHONY: gather-v-20-docs
+gather-v-20-docs:
+	# mkdir -p $(OLD_DOCS_TEMP_DIR)
+	# cd $(OLD_DOCS_TEMP_DIR) && git clone git@github.com:solo-io/solo-docs.git
+	# rm docs/content/cli/glooctl*
+	# cp $(OLD_DOCS_TEMP_DIR)/solo-docs/gloo/docs/cli/glooctl* docs/content/cli/
+	rm -rf docs/content/api/
+	cp -r $(OLD_DOCS_TEMP_DIR)/solo-docs/gloo/docs/api/ docs/content/api/
+
 #----------------------------------------------------------------------------------
 # Docker
 #----------------------------------------------------------------------------------
