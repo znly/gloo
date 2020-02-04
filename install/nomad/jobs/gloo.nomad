@@ -406,12 +406,12 @@ EOF
         "http",
       ]
       port = "http"
-      check {
-        name = "alive"
-        type = "tcp"
-        interval = "10s"
-        timeout = "2s"
-      }
+#      check {
+#        name = "alive"
+#        type = "tcp"
+#        interval = "10s"
+#        timeout = "2s"
+#      }
     }
 
     service {
@@ -421,12 +421,12 @@ EOF
         "https",
       ]
       port = "https"
-      check {
-        name = "alive"
-        type = "tcp"
-        interval = "10s"
-        timeout = "2s"
-      }
+#      check {
+#        name = "alive"
+#        type = "tcp"
+#        interval = "10s"
+#        timeout = "2s"
+#      }
     }
 
     service {
