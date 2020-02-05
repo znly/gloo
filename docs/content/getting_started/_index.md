@@ -1,6 +1,6 @@
 ---
 title: Getting Started with Gloo
-weight: 15
+weight: 10
 ---
 
 ## Gloo Says Go
