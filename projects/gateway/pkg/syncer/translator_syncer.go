@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/solo-io/gloo/pkg/utils/syncutil"
-	"github.com/solo-io/gloo/projects/gateway/pkg/reconciler"
 	"go.uber.org/zap/zapcore"
 
+	"github.com/solo-io/gloo/pkg/utils/syncutil"
+	"github.com/solo-io/gloo/projects/gateway/pkg/reconciler"
+	"github.com/solo-io/go-utils/hashutils"
 	"go.uber.org/zap"
 
 	v1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1"
@@ -52,11 +53,12 @@ func (s *translatorSyncer) Sync(ctx context.Context, snap *v1.ApiSnapshot) error
 
 	logger := contextutils.LoggerFrom(ctx)
 	logger.Debugw("begin sync", zap.Any("snapshot", snap.Stringer()))
-	logger.Infof("begin sync %v (%v virtual services, %v gateways, %v route tables)", snap.Hash(),
+	snapHash := hashutils.MustHash(snap)
+	logger.Infof("begin sync %v (%v virtual services, %v gateways, %v route tables)", snapHash,
 		len(snap.VirtualServices), len(snap.Gateways), len(snap.RouteTables))
-	defer logger.Infof("end sync %v", snap.Hash())
+	defer logger.Infof("end sync %v", snapHash)
 
-	// stringifying the snapshot may be an expensive operation, so we'd like to avoid building the large
+	// stringify-ing the snapshot may be an expensive operation, so we'd like to avoid building the large
 	// string if we're not even going to log it anyway
 	if contextutils.GetLogLevel() == zapcore.DebugLevel {
 		logger.Debug(syncutil.StringifySnapshot(snap))
@@ -110,6 +112,8 @@ func (s *translatorSyncer) propagateProxyStatus(ctx context.Context, proxy *gloo
 			case <-ctx.Done():
 				return
 			case status := <-statuses:
+				logger := contextutils.LoggerFrom(ctx)
+				logger.Debugf("gateway received proxy status: %v", status)
 				if status.Equal(lastStatus) {
 					continue
 				}
@@ -117,6 +121,11 @@ func (s *translatorSyncer) propagateProxyStatus(ctx context.Context, proxy *gloo
 				subresourceStatuses := map[string]*core.Status{
 					fmt.Sprintf("%T.%s", proxy, proxy.GetMetadata().Ref().Key()): &status,
 				}
+
+				logger.Debugw("gateway reports to be written",
+					zap.Any("reports", reports),
+					zap.Any("subresourceStatuses", subresourceStatuses))
+
 				err := s.reporter.WriteReports(ctx, reports, subresourceStatuses)
 				if err != nil {
 					contextutils.LoggerFrom(ctx).Errorf("err: updating dependent statuses: %v", err)

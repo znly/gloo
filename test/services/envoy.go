@@ -21,7 +21,7 @@ import (
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/config"
 	. "github.com/onsi/gomega"
-	"github.com/pkg/errors"
+	errors "github.com/rotisserie/eris"
 
 	"github.com/solo-io/go-utils/log"
 )
@@ -166,7 +166,7 @@ func NewEnvoyFactory() (*EnvoyFactory, error) {
 
 		envoyImageTag := os.Getenv("ENVOY_IMAGE_TAG")
 		if envoyImageTag == "" {
-			envoyImageTag = "latest"
+			panic("Must set the ENVOY_IMAGE_TAG env var. Find valid tag names here https://quay.io/repository/solo-io/gloo-envoy-wrapper?tab=tags")
 		}
 		log.Printf("Using envoy docker image tag: %s", envoyImageTag)
 
@@ -386,7 +386,7 @@ func (ei *EnvoyInstance) Clean() error {
 func (ei *EnvoyInstance) runContainer(ctx context.Context) error {
 	envoyImageTag := os.Getenv("ENVOY_IMAGE_TAG")
 	if envoyImageTag == "" {
-		return errors.New("Must set the ENVOY_IMAGE_TAG env var. Find valid tag names here https://quay.io/repository/solo-io/gloo-ee-envoy-wrapper?tab=tags")
+		return errors.New("Must set the ENVOY_IMAGE_TAG env var. Find valid tag names here https://quay.io/repository/solo-io/gloo-envoy-wrapper?tab=tags")
 	}
 
 	image := "quay.io/solo-io/gloo-envoy-wrapper:" + envoyImageTag

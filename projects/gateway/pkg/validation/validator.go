@@ -7,13 +7,12 @@ import (
 	"time"
 
 	"github.com/avast/retry-go"
-
 	"github.com/solo-io/go-utils/protoutils"
 	"github.com/solo-io/solo-kit/pkg/api/v1/resources"
 
 	"go.uber.org/multierr"
 
-	"github.com/pkg/errors"
+	errors "github.com/rotisserie/eris"
 	v1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1"
 	"github.com/solo-io/gloo/projects/gateway/pkg/translator"
 	"github.com/solo-io/gloo/projects/gateway/pkg/utils"
@@ -246,7 +245,7 @@ func (v *validator) ValidateVirtualService(ctx context.Context, vs *v1.VirtualSe
 		for i, existingVs := range snap.VirtualServices {
 			if vsRef == existingVs.GetMetadata().Ref() {
 				// check that the hash has changed; ignore irrelevant update such as status
-				if vs.Hash() == existingVs.Hash() {
+				if vs.MustHash() == existingVs.MustHash() {
 					return nil, nil, core.ResourceRef{}
 				}
 
@@ -322,7 +321,7 @@ func (v *validator) ValidateRouteTable(ctx context.Context, rt *v1.RouteTable) (
 		for i, existingRt := range snap.RouteTables {
 			if rtRef == existingRt.GetMetadata().Ref() {
 				// check that the hash has changed; ignore irrelevant update such as status
-				if rt.Hash() == existingRt.Hash() {
+				if rt.MustHash() == existingRt.MustHash() {
 					return nil, nil, core.ResourceRef{}
 				}
 
@@ -400,7 +399,7 @@ func (v *validator) ValidateGateway(ctx context.Context, gw *v1.Gateway) (ProxyR
 		for i, existingGw := range snap.Gateways {
 			if gwRef == existingGw.GetMetadata().Ref() {
 				// check that the hash has changed; ignore irrelevant update such as status
-				if gw.Hash() == existingGw.Hash() {
+				if gw.MustHash() == existingGw.MustHash() {
 					return nil, nil, core.ResourceRef{}
 				}
 
@@ -489,11 +488,36 @@ func virtualServicesForRouteTable(rt *v1.RouteTable, allVirtualServices v1.Virtu
 
 func routesContainRefs(list []*v1.Route, refs refSet) bool {
 	for _, r := range list {
+
 		delegate := r.GetDelegateAction()
 		if delegate == nil {
 			continue
 		}
-		if _, ok := refs[*delegate]; ok {
+
+		var routeTableRef *core.ResourceRef
+		// handle deprecated route table resource reference format
+		// TODO: remove when we remove the deprecated fields from the API
+		if delegate.Namespace != "" || delegate.Name != "" {
+			routeTableRef = &core.ResourceRef{
+				Namespace: delegate.Namespace,
+				Name:      delegate.Name,
+			}
+		} else {
+			switch selectorType := delegate.GetDelegationType().(type) {
+			case *v1.DelegateAction_Selector:
+				// Selectors do not represent hard referential constraints, i.e. we can safely remove
+				// a route table even when it is matches by one or more selectors. Hence, skip this check.
+				continue
+			case *v1.DelegateAction_Ref:
+				routeTableRef = selectorType.Ref
+			}
+		}
+
+		if routeTableRef == nil {
+			continue
+		}
+
+		if _, ok := refs[*routeTableRef]; ok {
 			return true
 		}
 	}

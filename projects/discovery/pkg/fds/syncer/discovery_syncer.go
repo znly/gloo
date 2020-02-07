@@ -3,6 +3,7 @@ package syncer
 import (
 	"context"
 
+	"github.com/solo-io/go-utils/hashutils"
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"github.com/solo-io/gloo/pkg/utils/syncutil"
@@ -30,8 +31,9 @@ func NewDiscoverySyncer(fd *fds.FunctionDiscovery, fdsMode v1.Settings_Discovery
 func (s *syncer) Sync(ctx context.Context, snap *v1.DiscoverySnapshot) error {
 	ctx = contextutils.WithLogger(ctx, "syncer")
 	logger := contextutils.LoggerFrom(ctx)
-	logger.Infof("begin sync %v (%v upstreams)", snap.Hash(), len(snap.Upstreams))
-	defer logger.Infof("end sync %v", snap.Hash())
+	snapHash := hashutils.MustHash(snap)
+	logger.Infof("begin sync %v (%v upstreams)", snapHash, len(snap.Upstreams))
+	defer logger.Infof("end sync %v", snapHash)
 
 	// stringifying the snapshot may be an expensive operation, so we'd like to avoid building the large
 	// string if we're not even going to log it anyway
@@ -45,9 +47,9 @@ func (s *syncer) Sync(ctx context.Context, snap *v1.DiscoverySnapshot) error {
 }
 
 const (
-	FdsLabelKey       = "discovery.solo.io/function_discovery"
-	enbledLabelValue  = "enabled"
-	disbledLabelValue = "disabled"
+	FdsLabelKey        = "discovery.solo.io/function_discovery"
+	enabledLabelValue  = "enabled"
+	disabledLabelValue = "disabled"
 )
 
 func selectUpstreamsForDiscovery(fdsMode v1.Settings_DiscoveryOptions_FdsMode, upstreams v1.UpstreamList, namespaces kubernetes.KubeNamespaceList) v1.UpstreamList {
@@ -72,11 +74,11 @@ func selectUpstreamsForDiscovery(fdsMode v1.Settings_DiscoveryOptions_FdsMode, u
 }
 
 func isBlacklisted(labels map[string]string) bool {
-	return labels != nil && labels[FdsLabelKey] == disbledLabelValue
+	return labels != nil && labels[FdsLabelKey] == disabledLabelValue
 }
 
 func isWhitelisted(labels map[string]string) bool {
-	return labels != nil && labels[FdsLabelKey] == enbledLabelValue
+	return labels != nil && labels[FdsLabelKey] == enabledLabelValue
 }
 
 // do not run fds on these namespaces unless explicitly enabled

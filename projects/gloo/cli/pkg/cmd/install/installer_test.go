@@ -38,7 +38,7 @@ metadata:
     app: gloo
     gloo: rbac
   annotations:
-    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook": pre-install
     "helm.sh/hook-weight": "5" # must be executed before cert-gen job
 subjects:
 - kind: ServiceAccount
@@ -58,7 +58,7 @@ metadata:
     app: gloo
     gloo: rbac
   annotations:
-    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook": post-install
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
     "` + constants.HookCleanupResourceAnnotation + `": "true" # Used internally to mark "hook cleanup" resources
 rules:
