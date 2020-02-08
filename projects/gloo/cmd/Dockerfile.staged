@@ -1,0 +1,20 @@
+FROM quay.io/solo-io/gloo-build as builder
+
+ADD . src
+
+WORKDIR src
+
+RUN make generated-code
+
+RUN make gloo
+
+FROM alpine
+
+RUN apk upgrade --update-cache \
+    && apk add ca-certificates \
+    && rm -rf /var/cache/apk/*
+
+COPY --from=builder _output/gloo-linux-amd64 /usr/local/bin/gloo
+COPY hack/utils/oss_compliance/third_party_licenses.txt /etc/third_party_licenses.txt
+
+ENTRYPOINT ["/usr/local/bin/gloo"]
