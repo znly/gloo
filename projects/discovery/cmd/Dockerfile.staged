@@ -6,7 +6,7 @@ WORKDIR /tmp/src
 
 RUN rm -rf vendor_any && go run generate.go
 
-RUN make gloo
+RUN make discovery
 
 FROM alpine
 
@@ -14,7 +14,6 @@ RUN apk upgrade --update-cache \
     && apk add ca-certificates \
     && rm -rf /var/cache/apk/*
 
-COPY --from=builder /tmp/src/_output/gloo-linux-amd64 /usr/local/bin/gloo
-COPY --from=builder /tmp/src/hack/utils/oss_compliance/third_party_licenses.txt /etc/third_party_licenses.txt
+COPY --from=builder /tmp/src/_output/discovery-linux-amd64 /usr/local/bin/discovery
 
-ENTRYPOINT ["/usr/local/bin/gloo"]
+ENTRYPOINT ["/usr/local/bin/discovery"]

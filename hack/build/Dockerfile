@@ -20,9 +20,9 @@ RUN apt-get -y update && \
 
 ADD . /tmp/src
 
-WORKDIR /tmp/src
-
-RUN go mod download
+RUN cd /tmp/src && \
+    go mod download && \
+    make update-deps
 
 RUN rm -rf /tmp/src
 
