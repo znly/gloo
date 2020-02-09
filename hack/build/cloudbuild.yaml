@@ -1,0 +1,20 @@
+# In the rppt directory, run the following command to build this builder.
+# $ gcloud container builds submit . --config=hack/build/cloudbuild.yaml --substitutions=TAG_NAME=$(git describe --tags --dirty)
+steps:
+# Build the docker image.
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'ls'
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-f', 'hack/build/Dockerfile', '-t', 'quay.io/solo-io/gloo-build:$TAG_NAME', '.']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['tag', 'quay.io/solo-io/gloo-build:$TAG_NAME', 'quay.io/solo-io/gloo-build:latest']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['login', 'quay.io', '--username', 'solo-io+solobot', '--password', '$$QUAY_IO_PASSWORD']
+  secretEnv: ['QUAY_IO_PASSWORD']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'quay.io/solo-io/gloo-build:$TAG_NAME', 'quay.io/solo-io/gloo-build:latest']
+
+secrets:
+- kmsKeyName: projects/solo-public/locations/global/keyRings/build/cryptoKeys/build-key
+  secretEnv:
+    QUAY_IO_PASSWORD: CiQABlzmSRx5TcOqbldXa/d/+bkmAfpNAWa3PTS06WvuloZL+vASaQCCPGSGCogonVZVEUNx4G3YJtWi18gSuNx4PvLe08q8xAflTMFkjsyQirAOK3Y2oCvgYwiw/ITcuydjkpMjxDygFyENXS9FKFJoAXHlPQE5qidKr8xxmxF5ezhmjGB0gjyjXIIkbSEnBg==

@@ -53,6 +53,13 @@ BUILD_ID := $(BUILD_ID)
 
 TEST_ASSET_DIR := $(ROOTDIR)/_test
 
+# $(1) asset name
+# $(2) asset directory
+define build_staged
+docker build $(ROOTDIR) -f $(2)/cmd/Dockerfile.staged \
+	-t quay.io/solo-io/$(1):$(VERSION)
+endef
+
 #----------------------------------------------------------------------------------
 # Macros
 #----------------------------------------------------------------------------------
@@ -67,7 +74,7 @@ get_sources = $(shell find $(1) -name "*.go" | grep -v test | grep -v generated.
 
 # https://www.viget.com/articles/two-ways-to-share-git-hooks-with-your-team/
 .PHONY: init
-init:
+init: update-deps
 	git config core.hooksPath .githooks
 
 .PHONY: fmt-changed
@@ -235,6 +242,9 @@ gateway-docker: $(OUTPUT_DIR)/gateway-linux-amd64 $(OUTPUT_DIR)/Dockerfile.gatew
 	docker build $(OUTPUT_DIR) -f $(OUTPUT_DIR)/Dockerfile.gateway \
 		-t quay.io/solo-io/gateway:$(VERSION)
 
+gateway-docker-build:
+	$(call build_staged,gateway,$(GATEWAY_DIR))
+
 #----------------------------------------------------------------------------------
 # Ingress
 #----------------------------------------------------------------------------------
@@ -255,6 +265,9 @@ $(OUTPUT_DIR)/Dockerfile.ingress: $(INGRESS_DIR)/cmd/Dockerfile
 ingress-docker: $(OUTPUT_DIR)/ingress-linux-amd64 $(OUTPUT_DIR)/Dockerfile.ingress
 	docker build $(OUTPUT_DIR) -f $(OUTPUT_DIR)/Dockerfile.ingress \
 		-t quay.io/solo-io/ingress:$(VERSION)
+
+ingress-docker-build:
+	$(call build_staged,ingress,$(INGRESS_DIR))
 
 #----------------------------------------------------------------------------------
 # Access Logger
@@ -277,6 +290,8 @@ access-logger-docker: $(OUTPUT_DIR)/access-logger-linux-amd64 $(OUTPUT_DIR)/Dock
 	docker build $(OUTPUT_DIR) -f $(OUTPUT_DIR)/Dockerfile.access-logger \
 		-t quay.io/solo-io/access-logger:$(VERSION)
 
+access-logger-docker-build:
+	$(call build_staged,ingress,$(INGRESS_DIR))
 #----------------------------------------------------------------------------------
 # Discovery
 #----------------------------------------------------------------------------------
@@ -298,6 +313,8 @@ discovery-docker: $(OUTPUT_DIR)/discovery-linux-amd64 $(OUTPUT_DIR)/Dockerfile.d
 	docker build $(OUTPUT_DIR) -f $(OUTPUT_DIR)/Dockerfile.discovery \
 		-t quay.io/solo-io/discovery:$(VERSION)
 
+discovery-docker-build:
+	$(call build_staged,discovery,$(DISCOVERY_DIR))
 #----------------------------------------------------------------------------------
 # Gloo
 #----------------------------------------------------------------------------------
@@ -320,6 +337,8 @@ gloo-docker: $(OUTPUT_DIR)/gloo-linux-amd64 $(OUTPUT_DIR)/Dockerfile.gloo
 	docker build $(OUTPUT_DIR) -f $(OUTPUT_DIR)/Dockerfile.gloo \
 		-t quay.io/solo-io/gloo:$(VERSION)
 
+gloo-docker-build:
+	$(call build_staged,gloo,$(GLOO_DIR))
 #----------------------------------------------------------------------------------
 # Envoy init (BASE)
 #----------------------------------------------------------------------------------
