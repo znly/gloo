@@ -53,8 +53,8 @@ BUILD_ID := $(BUILD_ID)
 
 TEST_ASSET_DIR := $(ROOTDIR)/_test
 
-# $(1) asset name
-# $(2) asset directory
+# $(1) component name
+# $(2) component directory
 define build_staged
 docker build $(ROOTDIR) -f $(2)/cmd/Dockerfile.staged \
 	-t quay.io/solo-io/$(1):$(VERSION)
@@ -115,8 +115,6 @@ check-spelling:
 build-container:
 	docker build -t quay.io/solo-io/gloo-build:$(VERSION) -f hack/build/Dockerfile .
 
-
-
 #----------------------------------------------------------------------------------
 # Clean
 #----------------------------------------------------------------------------------
@@ -138,14 +136,24 @@ clean:
 .PHONY: generated-code
 generated-code: $(OUTPUT_DIR)/.generated-code verify-enterprise-protos update-licenses generate-helm-files
 
+# Alternative to make generated-code which runs entirely in a docker container.
+# WARNING: On mac this will perform much slower as the performance of docker volumes is poor
+.PHONY: generated-code-docker
+generated-code-docker:
+	docker run --rm --name gloo-build -w /etc/src \
+		-c $(shell expr $(shell nproc --all) - 2) \
+        -v $(ROOTDIR):/etc/src:delegated quay.io/solo-io/gloo-build \
+        go run generate.go && goimports -w .
+
+
+
 # Note: currently we generate CLI docs, but don't push them to the consolidated docs repo (gloo-docs). Instead, the
 # Glooctl enterprise docs are pushed from the private repo.
-# TODO(EItanya): make mockgen work for gloo
 SUBDIRS:=$(shell ls -d -- */ | grep -v vendor)
 $(OUTPUT_DIR)/.generated-code:
 	go mod tidy
 	rm -rf vendor_any
-	find * -type f | grep .sk.md | xargs rm
+	find * -type f | grep .sk.md | xargs rm -f
 	GO111MODULE=on go generate ./...
 	rm docs/content/cli/glooctl*; GO111MODULE=on go run projects/gloo/cli/cmd/docs/main.go
 	gofmt -w $(SUBDIRS)
