@@ -1,0 +1,8 @@
+changelog:
+- type: NEW_FEATURE
+  issueLink: https://github.com/solo-io/gloo/issues/2392
+  description: >
+    Create a local development flow to build all gloo containers in docker, rather than on the local machine, before
+    copying the binaries into the containers. This can now be accomplished using some convenience targets in the Makefile.
+    For instance: the target for gloo is `gloo-docker-build`. Any of the projects can be built using this pattern,
+    `<name>-docker-build`.
