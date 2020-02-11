@@ -294,9 +294,9 @@ ACCESS_LOG_SOURCES=$(shell find $(ACCESS_LOG_DIR) -name "*.go" | grep -v test | 
 $(ACCESS_LOG_OUTPUT_DIR)/access-logger-linux-amd64: $(ACCESS_LOG_SOURCES)
 	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o $@ $(ACCESS_LOG_DIR)/cmd/main.go
 
-.PHONY: accesslogger-docker
+.PHONY: access-logger-docker
 access-logger-docker: $(ACCESS_LOG_OUTPUT_DIR)/access-logger-linux-amd64
-	$(call build_container,$(ACCESS_LOG))
+	docker build -t quay.io/solo-io/access-logger:$(VERSION) $(ACCESS_LOG_OUTPUT_DIR) -f $(ROOTDIR)/$(ACCESS_LOG_DIR)/cmd/Dockerfile;
 
 access-logger-docker-build:
 	$(call build_staged,access-logger,$(ACCESS_LOG_DIR))
@@ -389,7 +389,7 @@ envoywasm: $(ENVOY_WASM_OUTPUT_DIR)/envoywasm-linux-amd64
 .PHONY: gloo-envoy-wasm-wrapper-docker
 gloo-envoy-wasm-wrapper-docker: $(ENVOY_WASM_OUTPUT_DIR)/envoywasm-linux-amd64
 	docker build $(ENVOY_WASM_OUTPUT_DIR) -f $(ENVOY_WASM_DIR)/cmd/Dockerfile.envoywasm \
-		-t quay.io/solo-io/gloo-envoy-wrapper:$(VERSION)
+		-t quay.io/solo-io/gloo-envoy-wasm-wrapper:$(VERSION)
 
 
 #----------------------------------------------------------------------------------
