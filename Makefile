@@ -417,8 +417,6 @@ certgen: $(CERTGEN_OUTPUT_DIR)/certgen-linux-amd64
 # Build All
 #----------------------------------------------------------------------------------
 
-BINARIES := gloo glooctl gateway discovery envoyinit certgen ingress
-
 .PHONY: build
 build: gloo glooctl gateway discovery envoyinit certgen ingress
 
