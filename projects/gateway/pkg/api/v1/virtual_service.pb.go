@@ -121,10 +121,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // - `routeOptions` configuration will be inherited from parent routes, but can be overridden by the child
 //
 type VirtualService struct {
-	// The VirtualHost contains the
-	// The list of HTTP routes define routing actions to be taken
-	// for incoming HTTP requests whose host header matches
-	// this virtual host. If the request matches more than one route in the list, the first route matched will be selected.
+	// The VirtualHost contains the list of HTTP routes that define routing actions
+	// to be taken for incoming HTTP requests whose host header matches this virtual host.
+	// If the request matches more than one route in the list, the first route matched will be selected.
 	// If the list of routes is empty, the virtual host will be ignored by Gloo.
 	VirtualHost *VirtualHost `protobuf:"bytes,1,opt,name=virtual_host,json=virtualHost,proto3" json:"virtual_host,omitempty"`
 	// If provided, the Gateway will serve TLS/SSL traffic for this set of routes
