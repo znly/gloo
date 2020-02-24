@@ -3,6 +3,8 @@ package syncer
 import (
 	"time"
 
+	gateway_v1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1"
+
 	"github.com/solo-io/solo-kit/pkg/api/v1/clients"
 
 	"github.com/solo-io/gloo/projects/discovery/pkg/fds"
@@ -76,8 +78,16 @@ func RunFDS(opts bootstrap.Opts) error {
 		},
 	}
 
+	var virtualServiceClient gateway_v1.VirtualServiceClient
+	if opts.Settings.GetDiscovery().GetDynamicVirtualService() {
+		virtualServiceClient, err = gateway_v1.NewVirtualServiceClient(opts.UpstreamGroups)
+		if err != nil {
+			return err
+		}
+	}
+
 	// TODO(yuval-k): max Concurrency here
-	updater := fds.NewUpdater(watchOpts.Ctx, resolvers, upstreamClient, 0, functionalPlugins)
+	updater := fds.NewUpdater(watchOpts.Ctx, resolvers, upstreamClient, virtualServiceClient, 0, functionalPlugins)
 	disc := fds.NewFunctionDiscovery(updater)
 
 	sync := NewDiscoverySyncer(disc, fdsMode)

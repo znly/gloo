@@ -172,6 +172,8 @@ message Settings {
         }
 
         FdsMode fds_mode = 1;
+
+        bool dynamic_virtual_service = 2;
     }
 
     // Options for configuring Gloo's Discovery service

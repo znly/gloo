@@ -50,7 +50,6 @@ func (p *plugin) DiscoverUpstreams(_ []string, writeNamespace string, opts clien
 			}
 		}
 	}()
-
 	return realUpstreams, ourErrs, nil
 }
 

@@ -18,7 +18,7 @@ or potentially like static upstreams.
 // detectors detect a specific type of functional service
 // if they detect the service, they return service info and
 // annotations (optional) for the service
-// we want to bake sure that detect upstream for aws doesn't do anything
+// we want to make sure that detect upstream for aws doesn't do anything
 // perhaps we can do just that
 type FunctionDiscoveryFactory interface {
 	NewFunctionDiscovery(u *v1.Upstream) UpstreamFunctionDiscovery
