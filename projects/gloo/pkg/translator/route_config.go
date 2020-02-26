@@ -69,6 +69,7 @@ func (t *translatorInstance) computeVirtualHosts(params plugins.Params, proxy *v
 		return nil
 	}
 	virtualHosts := httpListener.HttpListener.VirtualHosts
+
 	ValidateVirtualHostDomains(virtualHosts, httpListenerReport)
 	requireTls := len(listener.SslConfigurations) > 0
 	var envoyVirtualHosts []*envoyroute.VirtualHost
@@ -85,6 +86,45 @@ func (t *translatorInstance) computeVirtualHosts(params plugins.Params, proxy *v
 }
 
 func (t *translatorInstance) computeVirtualHost(params plugins.VirtualHostParams, virtualHost *v1.VirtualHost, requireTls bool, vhostReport *validationapi.VirtualHostReport) *envoyroute.VirtualHost {
+
+	//if virtualHost.Domains[0] == "kdorosh.com" {
+	//	var envoyRequireTls envoyroute.VirtualHost_TlsRequirementType
+	//	if requireTls {
+	//		// TODO (ilackarms): support external-only TLS
+	//		envoyRequireTls = envoyroute.VirtualHost_ALL
+	//	}
+	//	return &envoyroute.VirtualHost{
+	//			Name:                       "vh-1",
+	//			Domains:                    []string{"kdorosh.com"},
+	//			Routes:                     []*envoyroute.Route{{
+	//				Action: &envoyroute.Route_Route{
+	//					Route: &envoyroute.RouteAction{
+	//						ClusterSpecifier: &envoyroute.RouteAction_Cluster{
+	//							Cluster: "dynamic_forward_proxy_cluster",
+	//						},
+	//					},
+	//				},
+	//			}},
+	//			RequireTls:                 envoyRequireTls,
+	//			VirtualClusters:            nil,
+	//			RateLimits:                 nil,
+	//			RequestHeadersToAdd:        nil,
+	//			RequestHeadersToRemove:     nil,
+	//			ResponseHeadersToAdd:       nil,
+	//			ResponseHeadersToRemove:    nil,
+	//			Cors:                       nil,
+	//			PerFilterConfig:            nil,
+	//			TypedPerFilterConfig:       nil,
+	//			IncludeRequestAttemptCount: false,
+	//			RetryPolicy:                nil,
+	//			HedgePolicy:                nil,
+	//			PerRequestBufferLimitBytes: nil,
+	//			XXX_NoUnkeyedLiteral:       struct{}{},
+	//			XXX_unrecognized:           nil,
+	//			XXX_sizecache:              0,
+	//		}
+	//	}
+
 
 	// Make copy to avoid modifying the snapshot
 	virtualHost = proto.Clone(virtualHost).(*v1.VirtualHost)
@@ -322,15 +362,24 @@ func (t *translatorInstance) setAction(params plugins.RouteParams, routeReport *
 func (t *translatorInstance) setRouteAction(params plugins.RouteParams, in *v1.RouteAction, out *envoyroute.RouteAction, routeReport *validationapi.RouteReport) error {
 	switch dest := in.Destination.(type) {
 	case *v1.RouteAction_Single:
-		usRef, err := usconversion.DestinationToUpstreamRef(dest.Single)
-		if err != nil {
-			return err
+		tags := dest.Single.GetConsul().GetTags()
+		if len(tags) > 1 && tags[1] == "2" {
+			out.ClusterSpecifier = &envoyroute.RouteAction_Cluster{
+				Cluster: "dynamic_forward_proxy_cluster",
+			}
+			tags[1] = "1"
+			out.MetadataMatch = getSubsetMatch(dest.Single)
+			return nil
+		} else {
+			usRef, err := usconversion.DestinationToUpstreamRef(dest.Single)
+			if err != nil {
+				return err
+			}
+			out.ClusterSpecifier = &envoyroute.RouteAction_Cluster{
+				Cluster: UpstreamToClusterName(*usRef),
+			}
+			out.MetadataMatch = getSubsetMatch(dest.Single)
 		}
-		out.ClusterSpecifier = &envoyroute.RouteAction_Cluster{
-			Cluster: UpstreamToClusterName(*usRef),
-		}
-
-		out.MetadataMatch = getSubsetMatch(dest.Single)
 
 		return checkThatSubsetMatchesUpstream(params.Params, dest.Single)
 	case *v1.RouteAction_Multi:

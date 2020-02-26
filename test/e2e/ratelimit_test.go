@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/solo-io/gloo/test/helpers"
 	"net"
 	"net/http"
 	"strings"
-
-	"github.com/solo-io/gloo/test/helpers"
+	"time"
 
 	pb "github.com/envoyproxy/go-control-plane/envoy/service/ratelimit/v2"
 	. "github.com/onsi/ginkgo"
@@ -137,6 +137,23 @@ var _ = Describe("Rate Limit", func() {
 			srv.GracefulStop()
 		})
 
+		It("should allow hostname DNS based dynamic routing", func() {
+			srv = startSimpleRateLimitServer(false, rlPort)
+
+			hosts := map[string]bool{"host1": true}
+			proxy := getProxy(envoyPort, testUpstream.Upstream.Metadata.Ref(), hosts)
+			_, err := testClients.ProxyClient.Write(proxy, clients.WriteOpts{})
+			Expect(err).NotTo(HaveOccurred())
+
+			EventuallyWithOffset(1, func() int {
+				res, err := get("host1", envoyPort)
+				if err != nil {
+					return 0
+				}
+				return res.StatusCode
+			}, "5s", ".5s").Should(Equal(200))
+		})
+
 		It("should rate limit", func() {
 			srv = startSimpleRateLimitServer(false, rlPort)
 
@@ -144,6 +161,7 @@ var _ = Describe("Rate Limit", func() {
 			proxy := getProxy(envoyPort, testUpstream.Upstream.Metadata.Ref(), hosts)
 			_, err := testClients.ProxyClient.Write(proxy, clients.WriteOpts{})
 			Expect(err).NotTo(HaveOccurred())
+			time.Sleep(2 * time.Second)
 
 			EventuallyRateLimited("host1", envoyPort)
 		})

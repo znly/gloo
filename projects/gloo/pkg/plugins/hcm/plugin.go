@@ -2,10 +2,13 @@ package hcm
 
 import (
 	"context"
-
 	envoyapi "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	envoycore "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	envoy_config_cluster_v3 "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	envoyhttp "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
+	envoy_extensions_common_dynamic_forward_proxy_v3 "github.com/envoyproxy/go-control-plane/envoy/extensions/common/dynamic_forward_proxy/v3"
+	envoy_extensions_filters_http_dynamic_forward_proxy_v3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/dynamic_forward_proxy/v3"
+	"github.com/golang/protobuf/ptypes"
 	errors "github.com/rotisserie/eris"
 	"github.com/solo-io/gloo/pkg/utils/gogoutils"
 	v1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1"
@@ -75,6 +78,41 @@ func (p *Plugin) ProcessListener(params plugins.Params, in *v1.Listener, out *en
 						return hcmPluginError(err)
 					}
 				}
+
+				if len(cfg.HttpFilters) > 0 {
+					cfg.HttpFilters = cfg.HttpFilters[:len(cfg.HttpFilters)-1]
+				}
+
+				dfp := &envoy_extensions_filters_http_dynamic_forward_proxy_v3.FilterConfig{
+					DnsCacheConfig:       &envoy_extensions_common_dynamic_forward_proxy_v3.DnsCacheConfig{
+						Name:                 "dynamic_forward_proxy_cache_config",
+						DnsLookupFamily:      envoy_config_cluster_v3.Cluster_V4_ONLY,
+						DnsRefreshRate:       nil,
+						HostTtl:              nil,
+						MaxHosts:             nil,
+						XXX_NoUnkeyedLiteral: struct{}{},
+						XXX_unrecognized:     nil,
+						XXX_sizecache:        0,
+					},
+					XXX_NoUnkeyedLiteral: struct{}{},
+					XXX_unrecognized:     nil,
+					XXX_sizecache:        0,
+				}
+
+				typedDfpConfig, err := ptypes.MarshalAny(dfp)
+				cfg.HttpFilters = append(cfg.HttpFilters, &envoyhttp.HttpFilter{
+					Name:                 "envoy.filters.http.dynamic_forward_proxy",
+					ConfigType:           &envoyhttp.HttpFilter_TypedConfig{
+						TypedConfig:typedDfpConfig,
+					},
+					XXX_NoUnkeyedLiteral: struct{}{},
+					XXX_unrecognized:     nil,
+					XXX_sizecache:        0,
+				})
+
+				cfg.HttpFilters = append(cfg.HttpFilters, &envoyhttp.HttpFilter{
+					Name:                 "envoy.router",
+				})
 
 				fc.Filters[i], err = translatorutil.NewFilterWithConfig(util.HTTPConnectionManager, &cfg)
 				// this should never error

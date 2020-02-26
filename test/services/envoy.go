@@ -67,6 +67,17 @@ stats_sinks:
 
 static_resources:
   clusters:
+  - name: dynamic_forward_proxy_cluster
+    connect_timeout: 1s
+    lb_policy: CLUSTER_PROVIDED
+    dns_resolvers: [{ socket_address: { address: {{.GlooAddr}}, port_value: 8600 }}]
+    cluster_type:
+      name: envoy.clusters.dynamic_forward_proxy
+      typed_config:
+        "@type": type.googleapis.com/envoy.config.cluster.dynamic_forward_proxy.v2alpha.ClusterConfig
+        dns_cache_config:
+          name: dynamic_forward_proxy_cache_config
+          dns_lookup_family: V4_ONLY
   - name: xds_cluster
     connect_timeout: 5.000s
     hosts:
