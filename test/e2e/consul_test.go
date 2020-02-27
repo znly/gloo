@@ -60,6 +60,24 @@ var _ = Describe("Consul e2e", func() {
 		return string(body), nil
 	}
 
+	queryService2 := func(port int) (string, error) {
+		response, err := http.Get(fmt.Sprintf("http://localhost:%d", port))
+		if err != nil {
+			return "", err
+		}
+		//noinspection GoUnhandledErrorResult
+		defer response.Body.Close()
+
+		body, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return "", err
+		}
+		if response.StatusCode != 200 {
+			return "", eris.Errorf("bad status code: %v (%v)", response.StatusCode, string(body))
+		}
+		return string(body), nil
+	}
+
 	BeforeEach(func() {
 		ctx, cancel = context.WithCancel(context.Background())
 
@@ -181,7 +199,7 @@ var _ = Describe("Consul e2e", func() {
 		err = consulInstance.RegisterService("my-svc", "my-svc-1", "my-svc.service.dc1.consul", []string{"svc", "1"}, svc1.Port)
 		Expect(err).NotTo(HaveOccurred())
 
-		_, err := testClients.ProxyClient.Write(getProxyWithConsulRoute(writeNamespace, envoyPort), clients.WriteOpts{Ctx: ctx})
+		_, err = testClients.ProxyClient.Write(getProxyWithoutConsulRoute(writeNamespace, envoyPort), clients.WriteOpts{Ctx: ctx, OverwriteExisting:true})
 		Expect(err).NotTo(HaveOccurred())
 
 		// Wait for proxy to be accepted
@@ -198,38 +216,24 @@ var _ = Describe("Consul e2e", func() {
 
 		By("requests only go to service with tag '1'")
 
-		// Service 2 does not match the tags on the route, so we should get only requests from service 1
-		Consistently(func() (<-chan *v1helpers.ReceivedRequest, error) {
-			_, err := queryService()
-			if err != nil {
-				return svc1.C, err
-			}
-			return svc1.C, nil
-		}, "2s", "0.2s").Should(Receive())
-
-
-		_, err = testClients.ProxyClient.Write(getProxyWithoutConsulRoute(writeNamespace, proxy.Metadata.ResourceVersion, envoyPort), clients.WriteOpts{Ctx: ctx, OverwriteExisting:true})
+		// TODO(kdorosh) get consul service address using consul client and then curl using that in the header!
+		cc, err := api.NewClient(api.DefaultConfig())
 		Expect(err).NotTo(HaveOccurred())
 
-		// Wait for proxy to be accepted
-		Eventually(func() bool {
-			proxy, err = testClients.ProxyClient.Read(writeNamespace, gatewaydefaults.GatewayProxyName, clients.ReadOpts{Ctx: ctx})
-			if err != nil {
-				return false
-			}
-			return proxy.Status.State == core.Status_Accepted
-		}, "10s", "0.2s").Should(BeTrue())
-
-
-		time.Sleep(2 * time.Second)
-
-		By("requests only go to service with tag '1'")
+		svcs, _, err := cc.Catalog().Service("my-svc", "", nil)
+		consulPort := svcs[0].ServicePort
+		fmt.Println(consulPort)
 
 		time.Sleep(60 * time.Minute) // while this is running, you can successfully use dynamic forwarding via curl -v -H "Host: 192.168.86.39:<consul port>" http://localhost:11082/1
 
+		// curl \
+		//    http://127.0.0.1:8500/v1/agent/services
+
+		// curl -v -H 'Host: 192.168.1.5:65506' http://localhost:11082
+
 		// Service 2 does not match the tags on the route, so we should get only requests from service 1
 		Consistently(func() (<-chan *v1helpers.ReceivedRequest, error) {
-			_, err := queryService()
+			_, err := queryService2(consulPort)
 			if err != nil {
 				return svc1.C, err
 			}
@@ -269,12 +273,11 @@ var _ = Describe("Consul e2e", func() {
 	})
 })
 
-func getProxyWithoutConsulRoute(ns, rv string, bindPort uint32) *gloov1.Proxy {
+func getProxyWithoutConsulRoute(ns string, bindPort uint32) *gloov1.Proxy {
 	return &gloov1.Proxy{
 		Metadata: core.Metadata{
 			Name:      gatewaydefaults.GatewayProxyName,
 			Namespace: ns,
-			ResourceVersion: rv,
 		},
 		Listeners: []*gloov1.Listener{{
 			Name:        "listener",
