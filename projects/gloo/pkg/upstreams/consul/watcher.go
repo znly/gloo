@@ -2,6 +2,7 @@ package consul
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/avast/retry-go"
@@ -49,6 +50,7 @@ type dataCenterServicesTuple struct {
 
 func (c *consulWatcher) WatchServices(ctx context.Context, dataCenters []string) (<-chan []*ServiceMeta, <-chan error) {
 
+	log.Printf("watching datacenters: '%v'", dataCenters)
 	var (
 		eg              errgroup.Group
 		outputChan      = make(chan []*ServiceMeta)
@@ -65,7 +67,7 @@ func (c *consulWatcher) WatchServices(ctx context.Context, dataCenters []string)
 
 		// Collect services
 		eg.Go(func() error {
-			aggregateServices(ctx, allServicesChan, dataCenterServicesChan)
+			aggregateServices(dcName, ctx, allServicesChan, dataCenterServicesChan)
 			return nil
 		})
 
@@ -137,6 +139,8 @@ func (c *consulWatcher) watchServicesInDataCenter(ctx context.Context, dataCente
 							WaitIndex:         lastIndex,
 						}).WithContext(ctx))
 
+						log.Printf("%v consul services in dc %v", len(services), dataCenter)
+
 						return err
 					},
 					retry.Attempts(6),
@@ -174,13 +178,14 @@ func (c *consulWatcher) watchServicesInDataCenter(ctx context.Context, dataCente
 	return servicesChan, errsChan
 }
 
-func aggregateServices(ctx context.Context, dest chan *dataCenterServicesTuple, src <-chan *dataCenterServicesTuple) {
+func aggregateServices(dcName string, ctx context.Context, dest chan *dataCenterServicesTuple, src <-chan *dataCenterServicesTuple) {
 	for {
 		select {
 		case services, ok := <-src:
 			if !ok {
 				return
 			}
+			log.Printf("got svc list: '%v', '%v'", dcName, services)
 			select {
 			case <-ctx.Done():
 				return

@@ -2,6 +2,9 @@ package consul
 
 import (
 	"context"
+	"fmt"
+	"github.com/solo-io/go-utils/hashutils"
+	"log"
 	"sort"
 	"strconv"
 	"strings"
@@ -32,12 +35,11 @@ func (p *plugin) WatchEndpoints(writeNamespace string, upstreamsToTrack v1.Upstr
 
 	logger := contextutils.LoggerFrom(contextutils.WithLogger(opts.Ctx, "consul_eds"))
 
-	// Filter out non-consul upstreams
-	trackedServices := make(map[string][]*v1.Upstream)
+	// get all the services we need to query based on the upstreams
+	uniqueServiceNames := make(map[string]struct{})
 	for _, us := range upstreamsToTrack {
-		if consulUsSpec := us.GetConsul(); consulUsSpec != nil {
-			// We generate one upstream for every Consul service name, so this should never happen.
-			trackedServices[consulUsSpec.ServiceName] = append(trackedServices[consulUsSpec.ServiceName], us)
+		if consulSpec := us.GetConsul(); consulSpec != nil {
+			uniqueServiceNames[consulSpec.ServiceName] = struct{}{}
 		}
 	}
 
@@ -89,7 +91,7 @@ func (p *plugin) WatchEndpoints(writeNamespace string, upstreamsToTrack v1.Upstr
 						eg.Go(func() error {
 							queryOpts := &consulapi.QueryOptions{Datacenter: dcName, RequireConsistent: true}
 
-							services, _, err := p.client.Service(svc.Name, "", queryOpts.WithContext(ctx))
+ 							services, _, err := p.client.Service(svc.Name, "", queryOpts.WithContext(ctx))
 							if err != nil {
 								return err
 							}
@@ -115,8 +117,8 @@ func (p *plugin) WatchEndpoints(writeNamespace string, upstreamsToTrack v1.Upstr
 
 				var endpoints v1.EndpointList
 				for _, spec := range specs.Get() {
-					if upstreams, ok := trackedServices[spec.ServiceName]; ok {
 						endpoints = append(endpoints, buildEndpoint(writeNamespace, spec, upstreams))
+					if upstreams, ok := tagsPerServiceName[spec.ServiceName]; ok {
 					}
 				}
 
@@ -125,7 +127,11 @@ func (p *plugin) WatchEndpoints(writeNamespace string, upstreamsToTrack v1.Upstr
 					return endpoints[i].Metadata.Name < endpoints[j].Metadata.Name
 				})
 
-				endpointsChan <- endpoints
+				select {
+				case <-ctx.Done():
+					return
+				case endpointsChan <- endpoints:
+				}
 
 			case <-opts.Ctx.Done():
 				close(endpointsChan)
@@ -213,13 +219,17 @@ func buildEndpoint(namespace string, service *consulapi.CatalogService, upstream
 		Address:   address,
 		Port:      uint32(service.ServicePort),
 	}
+
+	log.Printf("ENDPOINT NAME: '%v' SERVICE: '%+v'", ep.Metadata.Name, service)
+
 	return ep
 }
 
 func buildEndpointName(service *consulapi.CatalogService) string {
+	return fmt.Sprintf("%v-%v", service.ServiceName, hashutils.MustHash(service))
 	parts := []string{service.ServiceName}
-	if service.ServiceID != "" {
-		parts = append(parts, service.ServiceID)
+	if service.ID != "" {
+		parts = append(parts, service.ID)
 	}
 	unsanitizedName := strings.Join(parts, "-")
 	unsanitizedName = strings.ReplaceAll(unsanitizedName, "_", "")

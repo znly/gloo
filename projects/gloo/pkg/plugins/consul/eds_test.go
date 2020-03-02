@@ -291,7 +291,7 @@ var _ = Describe("Consul EDS", func() {
 
 		It("generates the correct endpoint for a given Consul service", func() {
 			consulService := &consulapi.CatalogService{
-				ServiceID:   "my-svc-0",
+				ID:          "my-svc-0",
 				ServiceName: "my-svc",
 				Address:     "127.0.0.1",
 				ServicePort: 1234,
@@ -343,7 +343,7 @@ func createTestUpstream(svcName string, tags, dataCenters []string) *v1.Upstream
 func createTestService(address, dc, name, id string, tags []string, port int, lastIndex uint64) *consulapi.CatalogService {
 	return &consulapi.CatalogService{
 		ServiceName: name,
-		ServiceID:   id,
+		ID:          id,
 		Address:     address,
 		Datacenter:  dc,
 		ServiceTags: tags,
