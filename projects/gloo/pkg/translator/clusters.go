@@ -1,13 +1,18 @@
 package translator
 
 import (
+	"context"
 	"fmt"
+	types "github.com/gogo/protobuf/types"
+	"github.com/solo-io/gloo/pkg/utils/protoutils"
+
+	structpb "github.com/golang/protobuf/ptypes/struct"
 	"time"
 
 	envoyapi "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	envoycluster "github.com/envoyproxy/go-control-plane/envoy/api/v2/cluster"
 	envoycore "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
-	"github.com/gogo/protobuf/types"
+
 	"github.com/rotisserie/eris"
 	"github.com/solo-io/gloo/pkg/utils/gogoutils"
 	v1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1"
@@ -50,12 +55,40 @@ func (t *translatorInstance) computeCluster(params plugins.Params, upstream *v1.
 		if err := upstreamPlugin.ProcessUpstream(params, upstream, out); err != nil {
 			reports.AddError(upstream, err)
 		}
+		addAnnotations(out.Metadata, upstream.Metadata.GetAnnotations())
+		addClusterMetadata(params.Ctx, out.Metadata, upstream.GetClusterMetadata())
 	}
 	if err := validateCluster(out); err != nil {
 		reports.AddError(upstream, eris.Wrapf(err, "cluster was configured improperly "+
 			"by one or more plugins: %v", out))
 	}
 	return out
+}
+
+func addClusterMetadata(ctx context.Context, metadata *envoycore.Metadata, annotations map[string]*types.Struct) *envoycore.Metadata {
+	if annotations == nil {
+		return metadata
+	}
+	if metadata == nil {
+		metadata = &envoycore.Metadata{
+			FilterMetadata: map[string]*structpb.Struct{},
+		}
+	}
+
+	if metadata.FilterMetadata == nil {
+		metadata.FilterMetadata = map[string]*structpb.Struct{}
+	}
+
+	for k, v := range annotations {
+		pb, err := protoutils.StructGogoToPb(v)
+		if err != nil {
+			contextutils.LoggerFrom(ctx).Warnf("Unable to convert gogo struct to protobuf struct, %v", pb)
+			continue
+		}
+		metadata.FilterMetadata[k] = pb
+	}
+
+	return metadata
 }
 
 func (t *translatorInstance) initializeCluster(upstream *v1.Upstream, endpoints []*v1.Endpoint, reports reporter.ResourceReports) *envoyapi.Cluster {

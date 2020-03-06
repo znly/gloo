@@ -50,6 +50,7 @@ Each upstream type is handled by a corresponding Gloo plugin. (plugins currently
 "azure": .azure.options.gloo.solo.io.UpstreamSpec
 "consul": .consul.options.gloo.solo.io.UpstreamSpec
 "awsEc2": .aws_ec2.options.gloo.solo.io.UpstreamSpec
+"clusterMetadata": map<string, .google.protobuf.Struct>
 
 ```
 
@@ -72,6 +73,7 @@ Each upstream type is handled by a corresponding Gloo plugin. (plugins currently
 | `azure` | [.azure.options.gloo.solo.io.UpstreamSpec](../options/azure/azure.proto.sk/#upstreamspec) |  Only one of `azure`, `kube`, `static`, `pipe`, `aws`, or `awsEc2` can be set. |  |
 | `consul` | [.consul.options.gloo.solo.io.UpstreamSpec](../options/consul/consul.proto.sk/#upstreamspec) |  Only one of `consul`, `kube`, `static`, `pipe`, `aws`, or `awsEc2` can be set. |  |
 | `awsEc2` | [.aws_ec2.options.gloo.solo.io.UpstreamSpec](../options/aws/ec2/aws_ec2.proto.sk/#upstreamspec) |  Only one of `awsEc2`, `kube`, `static`, `pipe`, `aws`, or `consul` can be set. |  |
+| `clusterMetadata` | `map<string, .google.protobuf.Struct>` | Metadata you'd like added to the generated envoy cluster filter metadata. Key is the filter name and value is the key-value metadata. <br> For example, with key "io.solo.transformation" and value {"host": "foo.example.com"}, the following is generated: <br> "metadata": { "filter_metadata": { "io.solo.transformation": { "host": "foo.example.com" } } } This can be useful, for example, with transformations that make use of the `clusterMetadata` function, which grabs values from the cluster metadata by keys underneath the "io.solo.transformation" filter. |  |
 
 
 

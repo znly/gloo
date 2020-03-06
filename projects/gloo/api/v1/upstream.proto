@@ -8,6 +8,7 @@ option (gogoproto.equal_all) = true;
 import "extproto/ext.proto";
 option (extproto.hash_all) = true;
 
+import "google/protobuf/struct.proto";
 import "solo-kit/api/v1/metadata.proto";
 import "gloo/projects/gloo/api/v1/ssl.proto";
 import "gloo/projects/gloo/api/v1/circuit_breaker.proto";
@@ -48,7 +49,6 @@ message Upstream {
     // if this upstream is created or modified by Discovery, metadata about the operation will be placed here.
     DiscoveryMetadata discovery_metadata = 3;
 
-
     UpstreamSslConfig ssl_config = 4;
 
     // Circuit breakers for this upstream. if not set, the defaults ones from the Gloo settings will be used.
@@ -76,6 +76,27 @@ message Upstream {
         consul.options.gloo.solo.io.UpstreamSpec consul = 16;
         aws_ec2.options.gloo.solo.io.UpstreamSpec aws_ec2 = 17;
     }
+
+    // Metadata you'd like added to the generated envoy cluster filter metadata. Key is the filter name and value is
+    // the key-value metadata.
+    //
+    // <br>
+    //
+    // For example, with key "io.solo.transformation" and value {"host": "foo.example.com"}, the following is generated:
+    //
+    // <br>
+    //
+    // "metadata": {
+    //   "filter_metadata": {
+    //     "io.solo.transformation": {
+    //       "host": "foo.example.com"
+    //     }
+    //   }
+    // }
+    //
+    // This can be useful, for example, with transformations that make use of the `clusterMetadata` function, which
+    // grabs values from the cluster metadata by keys underneath the "io.solo.transformation" filter.
+    map<string, google.protobuf.Struct> cluster_metadata = 18;
 }
 
 // created by discovery services

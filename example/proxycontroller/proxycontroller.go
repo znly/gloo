@@ -5,6 +5,7 @@ package main
 // all the import's we'll need for this controller
 import (
 	"context"
+	"github.com/solo-io/gloo/projects/gloo/pkg/api/external/envoy/extensions/transformation"
 	"log"
 	"os"
 	"time"
@@ -134,6 +135,26 @@ func makeDesiredProxy(upstreams v1.UpstreamList) *v1.Proxy {
 	// for each upstream.
 	var virtualHosts []*v1.VirtualHost
 
+	var transform     *transformation.RouteTransformations
+	transform = &transformation.RouteTransformations{
+		ResponseTransformation: &transformation.Transformation{
+			TransformationType: &transformation.Transformation_TransformationTemplate{
+				TransformationTemplate: &transformation.TransformationTemplate{
+					BodyTransformation: &transformation.TransformationTemplate_Body{
+						Body: &transformation.InjaTemplate{
+							Text: "k {{ clusterMetadata(\"kd\") }} dorosh", //TODO:(kdorosh) try new envoy filter
+						},
+					},
+					Headers: map[string]*transformation.InjaTemplate{
+						"content-type": {
+							Text: "text/html",
+						},
+					},
+				},
+			},
+		},
+	}
+
 	for _, upstream := range upstreams {
 		upstreamRef := upstream.Metadata.Ref()
 		// create a virtual host for each upstream
@@ -156,6 +177,10 @@ func makeDesiredProxy(upstreams v1.UpstreamList) *v1.Proxy {
 							Prefix: "/",
 						},
 					},
+				},
+
+				Options: &v1.RouteOptions{
+					Transformations: transform,
 				},
 
 				// tell Gloo where to send the requests
