@@ -211,6 +211,11 @@ func (rv *routeVisitor) visit(resource resourceWithRoutes, parentRoute *routeInf
 			if err != nil {
 				return nil, err
 			}
+
+			// set the namespace in route destinations to be the
+			// parent resource's namespace, if it is empty
+			setEmptyDestinationNamespaces(resource.InputResource().GetMetadata().GetNamespace(), glooRoute)
+
 			routes = append(routes, glooRoute)
 		}
 	}
@@ -224,6 +229,48 @@ func (rv *routeVisitor) visit(resource resourceWithRoutes, parentRoute *routeInf
 	}
 
 	return routes, nil
+}
+
+func setEmptyDestinationNamespaces(resourceNamespace string, route *gloov1.Route) {
+	routeAction := route.GetRouteAction()
+	if routeAction == nil {
+		return
+	}
+
+	setDestinationNamespace := func(dest *gloov1.Destination) {
+		switch d := dest.DestinationType.(type) {
+		case *gloov1.Destination_Upstream:
+			if d.Upstream == nil {
+				return
+			}
+			if d.Upstream.Namespace == "" {
+				d.Upstream.Namespace = resourceNamespace
+			}
+		case *gloov1.Destination_Kube:
+			if d.Kube == nil {
+				return
+			}
+			if d.Kube.Ref.Namespace == "" {
+				d.Kube.Ref.Namespace = resourceNamespace
+			}
+		}
+	}
+
+	switch destination := routeAction.Destination.(type) {
+	case *gloov1.RouteAction_Single:
+		setDestinationNamespace(destination.Single)
+	case *gloov1.RouteAction_Multi:
+		for _, weightedDestination := range destination.Multi.Destinations {
+			setDestinationNamespace(weightedDestination.Destination)
+		}
+	case *gloov1.RouteAction_UpstreamGroup:
+		if destination.UpstreamGroup == nil {
+			return
+		}
+		if destination.UpstreamGroup.Namespace == "" {
+			destination.UpstreamGroup.Namespace = resourceNamespace
+		}
+	}
 }
 
 // Returns the name of the route and a flag that is true if either the route or the parent route are explicitly named.
