@@ -9,13 +9,21 @@ import (
 	"os"
 	"time"
 
+	"github.com/solo-io/gloo/projects/gloo/pkg/api/v1/options/consul"
+
+	"github.com/hashicorp/consul/api"
+	"github.com/solo-io/gloo/pkg/utils/settingsutil"
 	v1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1"
 	matchers "github.com/solo-io/gloo/projects/gloo/pkg/api/v1/core/matchers"
+	"github.com/solo-io/gloo/projects/gloo/pkg/api/v1/options/static"
+	"github.com/solo-io/gloo/projects/gloo/pkg/bootstrap"
+	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/go-utils/kubeutils"
 	"github.com/solo-io/solo-kit/pkg/api/v1/clients"
 	"github.com/solo-io/solo-kit/pkg/api/v1/clients/factory"
 	"github.com/solo-io/solo-kit/pkg/api/v1/clients/kube"
 	core "github.com/solo-io/solo-kit/pkg/api/v1/resources/core"
+	"go.uber.org/zap"
 
 	// import for GKE
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -27,6 +35,20 @@ func main() {
 
 	// initialize Gloo API clients
 	upstreamClient, proxyClient := initGlooClients(ctx)
+
+	setupNamespace := "gloo-system"
+	setupDir := ""
+	settingsClient, err := kubeOrFileSettingsClient(ctx, setupNamespace, setupDir)
+	must(err)
+	err = settingsClient.Register()
+	must(err)
+
+	settings, err := settingsClient.Read("gloo-system", "default", clients.ReadOpts{})
+	must(err)
+
+	settings.Consul.Address = "127.0.0.1:8500" //TODO(kdorosh) remove this if you aren't running the script locally
+	consulClient, err := bootstrap.ConsulClientForSettings(ctx, settings)
+	must(err)
 
 	// start a watch on upstreams. we'll use this as our trigger
 	// whenever upstreams are modified, we'll trigger our sync function
@@ -43,15 +65,15 @@ func main() {
 		// process a new upstream list
 		case newUpstreamList := <-upstreamWatch:
 			// we received a new list of upstreams from our watch,
-			resync(ctx, newUpstreamList, proxyClient)
+			resync(ctx, newUpstreamList, proxyClient, upstreamClient, consulClient)
 		}
 	}
 }
 
 // we received a new list of upstreams! regenerate the desired proxy
 // and write it as a CRD to Kubernetes
-func resync(ctx context.Context, upstreams v1.UpstreamList, client v1.ProxyClient) {
-	desiredProxy := makeDesiredProxy(upstreams)
+func resync(ctx context.Context, upstreams v1.UpstreamList, client v1.ProxyClient, upstreamClient v1.UpstreamClient, consulClient *api.Client) {
+	desiredProxy := makeDesiredProxy(upstreams, upstreamClient, consulClient)
 
 	// see if the proxy exists. if yes, update; if no, create
 	existingProxy, err := client.Read(
@@ -126,7 +148,7 @@ func initGlooClients(ctx context.Context) (v1.UpstreamClient, v1.ProxyClient) {
 
 // in this function we'll generate an opinionated
 // proxy object with a routes for each of our upstreams
-func makeDesiredProxy(upstreams v1.UpstreamList) *v1.Proxy {
+func makeDesiredProxy(upstreams v1.UpstreamList, upstreamClient v1.UpstreamClient, consulClient *api.Client) *v1.Proxy {
 
 	// each virtual host represents the table of routes for a given
 	// domain or set of domains.
@@ -136,6 +158,11 @@ func makeDesiredProxy(upstreams v1.UpstreamList) *v1.Proxy {
 
 	for _, upstream := range upstreams {
 		upstreamRef := upstream.Metadata.Ref()
+
+		if consulUs := upstream.GetConsul(); consulUs != nil {
+			virtualHosts = append(virtualHosts, getConsulVhosts(upstream, consulUs, upstreamClient, consulClient)...)
+		}
+
 		// create a virtual host for each upstream
 		vHostForUpstream := &v1.VirtualHost{
 			// logical name of the virtual host, should be unique across vhosts
@@ -207,9 +234,116 @@ func makeDesiredProxy(upstreams v1.UpstreamList) *v1.Proxy {
 	return desiredProxy
 }
 
+func getConsulVhosts(upstream *v1.Upstream, consulUs *consul.UpstreamSpec, upstreamClient v1.UpstreamClient, consulClient *api.Client) []*v1.VirtualHost {
+	var virtualHosts []*v1.VirtualHost
+
+	for _, dc := range consulUs.GetDataCenters() {
+		queryOpts := &api.QueryOptions{Datacenter: dc, RequireConsistent: true}
+		svcs, _, err := consulClient.Catalog().Service(consulUs.GetServiceName(), "", queryOpts)
+		must(err)
+		for _, svc := range svcs {
+			// TODO(kdorosh) instead of making a new upstream for each service instance, make a single one with several
+			// hosts for each instance
+			newUs := &v1.Upstream{
+				Metadata: core.Metadata{
+					Name:      "consul-static-svc-" + svc.Node + "-" + svc.ServiceID,
+					Namespace: upstream.Metadata.Namespace,
+					Labels:    map[string]string{"example_created_by": "example_controller"},
+				},
+				UpstreamType: &v1.Upstream_Static{
+					Static: &static.UpstreamSpec{
+						Hosts: []*static.Host{
+							{
+								Addr: svc.ServiceAddress,
+								Port: uint32(svc.ServicePort),
+							},
+						},
+					},
+				},
+			}
+			_, err := upstreamClient.Write(newUs, clients.WriteOpts{OverwriteExisting: true})
+			if err != nil {
+				us, err := upstreamClient.Read(newUs.Metadata.Namespace, newUs.Metadata.Name, clients.ReadOpts{})
+				newUs.Metadata.ResourceVersion = us.Metadata.ResourceVersion
+				_, err = upstreamClient.Write(newUs, clients.WriteOpts{OverwriteExisting: true})
+				must(err)
+			}
+
+			virtualHosts = append(virtualHosts, vhostForUpstream(newUs, svc.ServiceAddress))
+		}
+	}
+	return virtualHosts
+}
+
+func vhostForUpstream(upstream *v1.Upstream, host string) *v1.VirtualHost {
+	upstreamRef := upstream.Metadata.Ref()
+	// create a virtual host for each upstream
+	return &v1.VirtualHost{
+		// logical name of the virtual host, should be unique across vhosts
+		Name: upstream.Metadata.Name,
+
+		// the domain will be our "matcher".
+		// requests with the Host header equal to the upstream name
+		// will be routed to this upstream
+		Domains: []string{upstream.Metadata.Name},
+
+		// we'll create just one route designed to match any request
+		// and send it to the upstream for this domain
+		Routes: []*v1.Route{{
+			// use a basic catch-all matcher
+			Matchers: []*matchers.Matcher{
+				&matchers.Matcher{
+					PathSpecifier: &matchers.Matcher_Prefix{
+						Prefix: "/",
+					},
+				},
+			},
+
+			Options: &v1.RouteOptions{
+				HostRewriteType: &v1.RouteOptions_HostRewrite{HostRewrite: host},
+			},
+
+			// tell Gloo where to send the requests
+			Action: &v1.Route_RouteAction{
+				RouteAction: &v1.RouteAction{
+					Destination: &v1.RouteAction_Single{
+						// single destination
+						Single: &v1.Destination{
+							DestinationType: &v1.Destination_Upstream{
+								// a "reference" to the upstream, which is a Namespace/Name tuple
+								Upstream: &upstreamRef,
+							},
+						},
+					},
+				},
+			},
+		}},
+	}
+}
+
 // make our lives easy
 func must(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func kubeOrFileSettingsClient(ctx context.Context, setupNamespace, settingsDir string) (v1.SettingsClient, error) {
+	if settingsDir != "" {
+		contextutils.LoggerFrom(ctx).Infow("using filesystem for settings", zap.String("directory", settingsDir))
+		return v1.NewSettingsClient(&factory.FileResourceClientFactory{
+			RootDir: settingsDir,
+		})
+	}
+	cfg, err := kubeutils.GetConfig("", "")
+	if err != nil {
+		return nil, err
+	}
+	return v1.NewSettingsClient(&factory.KubeResourceClientFactory{
+		Crd:                v1.SettingsCrd,
+		Cfg:                cfg,
+		SharedCache:        kube.NewKubeCache(ctx),
+		NamespaceWhitelist: []string{setupNamespace},
+		SkipCrdCreation:    settingsutil.GetSkipCrdCreation(),
+	})
 }
