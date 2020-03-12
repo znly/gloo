@@ -1,0 +1,33 @@
+changelog:
+  - type: NEW_FEATURE
+    description: |
+      Add a new `clusterMetadata(key)` function to the open-source Envoy-Gloo transformation filter. Gloo now adds
+      upstream annotations & the new `cluster_metadata` field to the generated Envoy cluster metadata.
+
+      For example, an `Upstream` annotated with "key", "value" will generate the following Envoy cluster metadata:
+      ```
+      "metadata": {
+        "filter_metadata": {
+          "io.solo.annotations": {
+            "key": "value"
+          }
+        }
+      }
+      ```
+
+      An `Upstream` with the following `cluster_metadata`: `"io.solo.transformation" : {"host": "foo.example.com" }`
+      will generate the Envoy cluster metadata:
+      ```
+      "metadata": {
+        "filter_metadata": {
+          "io.solo.transformation": {
+            "host": "foo.example.com"
+          }
+        }
+      }
+      ```
+
+      Gloo users can use the `clusterMetadata(key)` function to grab Envoy cluster metadata underneath the
+      `"io.solo.transformation"` filter for use in transformations. This is useful, for example, in operators that
+      write custom metadata to upstreams for use in transformations.
+    issueLink: https://github.com/solo-io/gloo/issues/2552
