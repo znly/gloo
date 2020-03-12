@@ -1,7 +1,6 @@
 package consul
 
 import (
-	"github.com/gogo/protobuf/types"
 	"sort"
 	"strings"
 
@@ -46,9 +45,8 @@ func toUpstreamList(forNamespace string, services []*ServiceMeta) v1.UpstreamLis
 func ToUpstream(service *ServiceMeta) *v1.Upstream {
 	return &v1.Upstream{
 		Metadata: core.Metadata{
-			Name:        fakeUpstreamName(service.Name),
-			Namespace:   defaults.GlooSystem,
-			Annotations: map[string]string{"k2": "v2"},
+			Name:      fakeUpstreamName(service.Name),
+			Namespace: defaults.GlooSystem,
 		},
 		UpstreamType: &v1.Upstream_Consul{
 			Consul: &consulplugin.UpstreamSpec{
@@ -57,7 +55,6 @@ func ToUpstream(service *ServiceMeta) *v1.Upstream {
 				ServiceTags: service.Tags,
 			},
 		},
-		ClusterMetadata: map[string]*types.Struct{"kdorosh":nil},
 	}
 }
 

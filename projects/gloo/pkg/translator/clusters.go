@@ -3,11 +3,13 @@ package translator
 import (
 	"context"
 	"fmt"
+
 	types "github.com/gogo/protobuf/types"
 	"github.com/solo-io/gloo/pkg/utils/protoutils"
 
-	structpb "github.com/golang/protobuf/ptypes/struct"
 	"time"
+
+	structpb "github.com/golang/protobuf/ptypes/struct"
 
 	envoyapi "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	envoycluster "github.com/envoyproxy/go-control-plane/envoy/api/v2/cluster"

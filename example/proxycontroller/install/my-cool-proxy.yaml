@@ -90,8 +90,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-          image: quay.io/solo-io/gloo-envoy-wrapper:kdorosh # <- use this instead if using open-source Gloo
-          #image: quay.io/solo-io/gloo-ee-envoy-wrapper:kdorosh # <- you must use closed-source envoy if using Gloo Enterprise
+          # image: quay.io/solo-io/gloo-envoy-wrapper:1.2.12 # <- use this instead if using open-source Gloo
+          image: quay.io/solo-io/gloo-ee-envoy-wrapper:1.2.0 # <- you must use closed-source envoy if using Gloo Enterprise
           imagePullPolicy: Always
           name: my-cool-proxy
           ports:
