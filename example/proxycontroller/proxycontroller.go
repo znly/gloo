@@ -1,14 +1,15 @@
-// +build ignore
-
 package main
 
 // all the import's we'll need for this controller
 import (
 	"context"
+	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/solo-io/gloo/projects/gloo/pkg/api/v1/options/consul"
 
 	"github.com/hashicorp/consul/api"
@@ -29,14 +30,28 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )
 
+var (
+	labels = map[string]string{"example_created_by": "example_controller"}
+)
+
 func main() {
+	run()
+}
+
+func run() {
 	// root context for the whole thing
 	ctx := context.Background()
-
+	setupNamespace := "gloo-system"
+	inKube := false
+	if data, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace"); err == nil {
+		if ns := strings.TrimSpace(string(data)); len(ns) > 0 {
+			setupNamespace = ns
+			inKube = true
+		}
+	}
 	// initialize Gloo API clients
 	upstreamClient, proxyClient := initGlooClients(ctx)
 
-	setupNamespace := "gloo-system"
 	setupDir := ""
 	settingsClient, err := kubeOrFileSettingsClient(ctx, setupNamespace, setupDir)
 	must(err)
@@ -45,8 +60,10 @@ func main() {
 
 	settings, err := settingsClient.Read("gloo-system", "default", clients.ReadOpts{})
 	must(err)
-
-	settings.Consul.Address = "127.0.0.1:8500" //TODO(kdorosh) remove this if you aren't running the script locally
+	if !inKube {
+		// if not in kube, assume we are doing local dev
+		settings.Consul.Address = "127.0.0.1:8500"
+	}
 	consulClient, err := bootstrap.ConsulClientForSettings(ctx, settings)
 	must(err)
 
@@ -65,15 +82,15 @@ func main() {
 		// process a new upstream list
 		case newUpstreamList := <-upstreamWatch:
 			// we received a new list of upstreams from our watch,
-			resync(ctx, newUpstreamList, proxyClient, upstreamClient, consulClient)
+			resync(ctx, setupNamespace, newUpstreamList, proxyClient, upstreamClient, consulClient)
 		}
 	}
 }
 
 // we received a new list of upstreams! regenerate the desired proxy
 // and write it as a CRD to Kubernetes
-func resync(ctx context.Context, upstreams v1.UpstreamList, client v1.ProxyClient, upstreamClient v1.UpstreamClient, consulClient *api.Client) {
-	desiredProxy := makeDesiredProxy(upstreams, upstreamClient, consulClient)
+func resync(ctx context.Context, setupNamespace string, upstreams v1.UpstreamList, client v1.ProxyClient, upstreamClient v1.UpstreamClient, consulClient *api.Client) {
+	desiredProxy := makeDesiredProxy(setupNamespace, upstreams, upstreamClient, consulClient)
 
 	// see if the proxy exists. if yes, update; if no, create
 	existingProxy, err := client.Read(
@@ -148,7 +165,7 @@ func initGlooClients(ctx context.Context) (v1.UpstreamClient, v1.ProxyClient) {
 
 // in this function we'll generate an opinionated
 // proxy object with a routes for each of our upstreams
-func makeDesiredProxy(upstreams v1.UpstreamList, upstreamClient v1.UpstreamClient, consulClient *api.Client) *v1.Proxy {
+func makeDesiredProxy(setupNamespace string, upstreams v1.UpstreamList, upstreamClient v1.UpstreamClient, consulClient *api.Client) *v1.Proxy {
 
 	// each virtual host represents the table of routes for a given
 	// domain or set of domains.
@@ -157,63 +174,24 @@ func makeDesiredProxy(upstreams v1.UpstreamList, upstreamClient v1.UpstreamClien
 	var virtualHosts []*v1.VirtualHost
 
 	for _, upstream := range upstreams {
-		upstreamRef := upstream.Metadata.Ref()
-
 		if consulUs := upstream.GetConsul(); consulUs != nil {
 			virtualHosts = append(virtualHosts, getConsulVhosts(upstream, consulUs, upstreamClient, consulClient)...)
 		}
-
-		// create a virtual host for each upstream
-		vHostForUpstream := &v1.VirtualHost{
-			// logical name of the virtual host, should be unique across vhosts
-			Name: upstream.Metadata.Name,
-
-			// the domain will be our "matcher".
-			// requests with the Host header equal to the upstream name
-			// will be routed to this upstream
-			Domains: []string{upstream.Metadata.Name},
-
-			// we'll create just one route designed to match any request
-			// and send it to the upstream for this domain
-			Routes: []*v1.Route{{
-				// use a basic catch-all matcher
-				Matchers: []*matchers.Matcher{
-					&matchers.Matcher{
-						PathSpecifier: &matchers.Matcher_Prefix{
-							Prefix: "/",
-						},
-					},
-				},
-
-				// tell Gloo where to send the requests
-				Action: &v1.Route_RouteAction{
-					RouteAction: &v1.RouteAction{
-						Destination: &v1.RouteAction_Single{
-							// single destination
-							Single: &v1.Destination{
-								DestinationType: &v1.Destination_Upstream{
-									// a "reference" to the upstream, which is a Namespace/Name tuple
-									Upstream: &upstreamRef,
-								},
-							},
-						},
-					},
-				},
-			}},
-		}
-
-		virtualHosts = append(virtualHosts, vHostForUpstream)
 	}
 
 	desiredProxy := &v1.Proxy{
 		// metadata will be translated to Kubernetes ObjectMeta
-		Metadata: core.Metadata{Namespace: "gloo-system", Name: "my-cool-proxy"},
+		Metadata: core.Metadata{
+			Namespace: setupNamespace,
+			Name:      "my-cool-proxy",
+			Labels:    labels,
+		},
 
 		// we have the option of creating multiple listeners,
 		// but for the purpose of this example we'll just use one
 		Listeners: []*v1.Listener{{
 			// logical name for the listener
-			Name: "my-amazing-listener",
+			Name: "aggregated-listener",
 
 			// instruct envoy to bind to all interfaces on port 8080
 			BindAddress: "::", BindPort: 8080,
@@ -234,44 +212,63 @@ func makeDesiredProxy(upstreams v1.UpstreamList, upstreamClient v1.UpstreamClien
 	return desiredProxy
 }
 
-func getConsulVhosts(upstream *v1.Upstream, consulUs *consul.UpstreamSpec, upstreamClient v1.UpstreamClient, consulClient *api.Client) []*v1.VirtualHost {
-	var virtualHosts []*v1.VirtualHost
+func getDesiredConsulUpstream(upstream *v1.Upstream, consulClient *api.Client) *v1.Upstream {
+	consulUs := upstream.GetConsul()
+	if consulUs == nil {
+		return nil
+	}
 
+	var hosts []*static.Host
 	for _, dc := range consulUs.GetDataCenters() {
 		queryOpts := &api.QueryOptions{Datacenter: dc, RequireConsistent: true}
 		svcs, _, err := consulClient.Catalog().Service(consulUs.GetServiceName(), "", queryOpts)
 		must(err)
 		for _, svc := range svcs {
-			// TODO(kdorosh) instead of making a new upstream for each service instance, make a single one with several
-			// hosts for each instance
-			newUs := &v1.Upstream{
-				Metadata: core.Metadata{
-					Name:      "consul-static-svc-" + svc.Node + "-" + svc.ServiceID,
-					Namespace: upstream.Metadata.Namespace,
-					Labels:    map[string]string{"example_created_by": "example_controller"},
-				},
-				UpstreamType: &v1.Upstream_Static{
-					Static: &static.UpstreamSpec{
-						Hosts: []*static.Host{
-							{
-								Addr: svc.ServiceAddress,
-								Port: uint32(svc.ServicePort),
-							},
-						},
-					},
-				},
-			}
-			_, err := upstreamClient.Write(newUs, clients.WriteOpts{OverwriteExisting: true})
-			if err != nil {
-				us, err := upstreamClient.Read(newUs.Metadata.Namespace, newUs.Metadata.Name, clients.ReadOpts{})
-				newUs.Metadata.ResourceVersion = us.Metadata.ResourceVersion
-				_, err = upstreamClient.Write(newUs, clients.WriteOpts{OverwriteExisting: true})
-				must(err)
-			}
-
-			virtualHosts = append(virtualHosts, vhostForUpstream(newUs, svc.ServiceAddress))
+			hosts = append(hosts, &static.Host{
+				Addr: svc.ServiceAddress,
+				Port: uint32(svc.ServicePort),
+			})
 		}
 	}
+
+	return &v1.Upstream{
+		Metadata: core.Metadata{
+			Name:      upstream.GetMetadata().Name + "-static",
+			Namespace: upstream.GetMetadata().Namespace,
+			Labels:    labels,
+			/*
+				OwnerReferences: []*core.Metadata_OwnerReference{
+					&core.Metadata_OwnerReference{
+						Kind:       "Upstream",
+						ApiVersion: "gloo.solo.io/v1",
+						Name:       upstream.GetMetadata().Name,
+						UUID: ...,
+					},
+				},
+			*/
+		},
+		UpstreamType: &v1.Upstream_Static{
+			Static: &static.UpstreamSpec{
+				Hosts: hosts,
+			},
+		},
+	}
+
+}
+
+func getConsulVhosts(upstream *v1.Upstream, consulUs *consul.UpstreamSpec, upstreamClient v1.UpstreamClient, consulClient *api.Client) []*v1.VirtualHost {
+	var virtualHosts []*v1.VirtualHost
+
+	desiredUpstream := getDesiredConsulUpstream(upstream, consulClient)
+
+	_, err := upstreamClient.Write(desiredUpstream, clients.WriteOpts{OverwriteExisting: true})
+	if err != nil {
+		us, err := upstreamClient.Read(desiredUpstream.Metadata.Namespace, desiredUpstream.Metadata.Name, clients.ReadOpts{})
+		desiredUpstream.Metadata.ResourceVersion = us.GetMetadata().ResourceVersion
+		_, err = upstreamClient.Write(desiredUpstream, clients.WriteOpts{OverwriteExisting: true})
+		must(err)
+	}
+	virtualHosts = append(virtualHosts, vhostForUpstream(desiredUpstream, consulUs.ServiceName))
 	return virtualHosts
 }
 
@@ -300,7 +297,7 @@ func vhostForUpstream(upstream *v1.Upstream, host string) *v1.VirtualHost {
 			},
 
 			Options: &v1.RouteOptions{
-				HostRewriteType: &v1.RouteOptions_HostRewrite{HostRewrite: host},
+				HostRewriteType: &v1.RouteOptions_AutoHostRewrite{AutoHostRewrite: &types.BoolValue{Value: true}},
 			},
 
 			// tell Gloo where to send the requests

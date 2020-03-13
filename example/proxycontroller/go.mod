@@ -3,9 +3,43 @@ module proxycontroller
 go 1.13
 
 require (
-	github.com/solo-io/gloo v1.2.12 // change to update Gloo version to build against
-	github.com/solo-io/go-utils v0.11.5
-	github.com/solo-io/solo-kit v0.11.15
+	code.cloudfoundry.org/bytefmt v0.0.0-20180906201452-2aa6f33b730c // indirect
+	github.com/Azure/azure-sdk-for-go v37.1.0+incompatible // indirect
+	github.com/Azure/go-autorest/autorest/azure/auth v0.4.2 // indirect
+	github.com/Azure/go-autorest/autorest/to v0.3.0 // indirect
+	github.com/Azure/go-autorest/autorest/validation v0.2.0 // indirect
+	github.com/DataDog/datadog-go v3.3.0+incompatible // indirect
+	github.com/SermoDigital/jose v0.9.1 // indirect
+	github.com/aliyun/alibaba-cloud-sdk-go v1.60.287 // indirect
+	github.com/apple/foundationdb/bindings/go v0.0.0-20191214003451-5d1974539aa9 // indirect
+	github.com/chai2010/gettext-go v0.0.0-20170215093142-bf70f2a70fb1 // indirect
+	github.com/cockroachdb/cockroach-go v0.0.0-20190925194419-606b3d062051 // indirect
+	github.com/denisenkom/go-mssqldb v0.0.0-20191128021309-1d7a30a10f73 // indirect
+	github.com/go-ldap/ldap v3.0.3+incompatible // indirect
+	github.com/gocql/gocql v0.0.0-20191126110522-1982a06ad6b9 // indirect
+	github.com/hashicorp/consul v1.6.2 // indirect
+	github.com/hashicorp/consul/api v1.3.0
+	github.com/hashicorp/go-gcp-common v0.6.0 // indirect
+	github.com/hashicorp/go-memdb v1.0.4 // indirect
+	github.com/hashicorp/nomad/api v0.0.0-20191213172644-7700d38457f3 // indirect
+	github.com/hashicorp/vault v1.3.0 // indirect
+	github.com/jackc/pgconn v1.1.0 // indirect
+	github.com/jefferai/jsonx v1.0.1 // indirect
+	github.com/joyent/triton-go v1.7.0 // indirect
+	github.com/keybase/go-crypto v0.0.0-20190828182435-a05457805304 // indirect
+	github.com/michaelklishin/rabbit-hole v1.5.0 // indirect
+	github.com/ncw/swift v1.0.49 // indirect
+	github.com/pierrec/cmdflag v0.0.2 // indirect
+	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da // indirect
+	github.com/schollz/progressbar/v2 v2.12.1 // indirect
+	github.com/solo-io/gloo v1.3.12 // change to update Gloo version to build against
+	github.com/solo-io/go-utils v0.14.1
+	github.com/solo-io/solo-kit v0.13.2
+	github.com/technosophos/moniker v0.0.0-20180509230615-a5dbd03a2245 // indirect
+	github.com/ugorji/go v1.1.5-pre // indirect
+	go.etcd.io/etcd v3.3.18+incompatible // indirect
+	go.uber.org/zap v1.13.0
+	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22 // indirect
 	k8s.io/client-go v11.0.0+incompatible
 )
 
