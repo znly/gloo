@@ -2,7 +2,6 @@ package translator
 
 import (
 	"context"
-	"net/url"
 	"strings"
 
 	structpb "github.com/golang/protobuf/ptypes/struct"
@@ -108,11 +107,10 @@ func addToMeta(filterMeta map[string]*structpb.Struct, k, v string) {
 
 	filterNS := SoloAnnotations
 
-	if strings.Contains(k, "/") {
-		if parsedKey, err := url.Parse(k); err == nil {
-			filterNS = parsedKey.Hostname()
-			k = parsedKey.Path
-		}
+	parts := strings.SplitN(k, "/", 2)
+	if len(parts) == 2 {
+		filterNS = parts[0]
+		k = parts[1]
 	}
 
 	if filterMeta[filterNS] == nil || filterMeta[filterNS].Fields == nil {
