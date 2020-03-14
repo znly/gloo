@@ -17,18 +17,26 @@ type DnsResolver interface {
 
 type ConsulDnsResolver struct {
 	DnsAddress string
+
+	res net.Resolver
+}
+
+func NewConsulDnsResolver(dnsAddress string) *ConsulDnsResolver {
+	return &ConsulDnsResolver{
+		DnsAddress: dnsAddress,
+		res: net.Resolver{
+			PreferGo: true, // otherwise we may use cgo which doesn't resolve on my mac in testing
+			Dial: func(ctx context.Context, network, address string) (conn net.Conn, err error) {
+				// DNS typically uses UDP and falls back to TCP if the response size is greater than one packet
+				// (originally 512 bytes). we use TCP to ensure we receive all IPs in a large DNS response
+				return net.DialContext(ctx, "tcp", c.DnsAddress)
+			},
+		},
+	}
 }
 
 func (c *ConsulDnsResolver) Resolve(address string) ([]net.IPAddr, error) {
-	res := net.Resolver{
-		PreferGo: true, // otherwise we may use cgo which doesn't resolve on my mac in testing
-		Dial: func(ctx context.Context, network, address string) (conn net.Conn, err error) {
-			// DNS typically uses UDP and falls back to TCP if the response size is greater than one packet
-			// (originally 512 bytes). we use TCP to ensure we receive all IPs in a large DNS response
-			return net.Dial("tcp", c.DnsAddress)
-		},
-	}
-	ipAddrs, err := res.LookupIPAddr(context.Background(), address)
+	ipAddrs, err := c.res.LookupIPAddr(context.TODO(), address)
 	if err != nil {
 		return nil, err
 	}
