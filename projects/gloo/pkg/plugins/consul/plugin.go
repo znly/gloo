@@ -57,7 +57,7 @@ func (p *plugin) Resolve(u *v1.Upstream) (*url.URL, error) {
 
 	for _, inst := range instances {
 		if matchTags(spec.ServiceTags, inst.ServiceTags) {
-			ipAddresses, err := getIpAddresses(inst.ServiceAddress, p.resolver)
+			ipAddresses, _, err := getIpAddresses(inst.ServiceAddress, p.resolver)
 			if err != nil {
 				return nil, err
 			}

@@ -265,13 +265,13 @@ func getIpAddresses(address string, resolver DnsResolver) ([]string, bool, error
 	// we're assuming the consul service returned a hostname instead of an IP
 	// we need to resolve this here so EDS can be given IPs (EDS can't resolve hostnames)
 	if resolver == nil {
-		return nil, eris.Errorf("Consul service returned an address that couldn't be parsed as an IP (%s), "+
+		return nil, false, eris.Errorf("Consul service returned an address that couldn't be parsed as an IP (%s), "+
 			"would have resolved as a hostname but the configured Consul DNS resolver was nil", address)
 	}
 
 	ipAddrs, err := resolver.Resolve(address)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	var ipAddresses []string
