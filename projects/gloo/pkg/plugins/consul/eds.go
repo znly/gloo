@@ -242,24 +242,24 @@ func buildEndpoints(namespace string, resolver DnsResolver, service *consulapi.C
 		address = service.Address
 	}
 
-	ipAddresses, err := getIpAddresses(address, resolver)
+	ipAddresses, changed, err := getIpAddresses(address, resolver)
 	if err != nil {
 		return nil, err
 	}
 
 	var endpoints []*v1.Endpoint
 	for _, ipAddr := range ipAddresses {
-		endpoints = append(endpoints, buildEndpoint(namespace, ipAddr, service, upstreams))
+		endpoints = append(endpoints, buildEndpoint(namespace, ipAddr, changed, service, upstreams))
 	}
 	return endpoints, nil
 }
 
 // only returns an error if the consul service address is a hostname and we can't resolve it
-func getIpAddresses(address string, resolver DnsResolver) ([]string, error) {
+func getIpAddresses(address string, resolver DnsResolver) ([]string, bool, error) {
 	addr := net.ParseIP(address)
 	if addr != nil {
 		// the consul service address is an IP address, no need to resolve it!
-		return []string{address}, nil
+		return []string{address}, false, nil
 	}
 
 	// we're assuming the consul service returned a hostname instead of an IP
@@ -278,11 +278,11 @@ func getIpAddresses(address string, resolver DnsResolver) ([]string, error) {
 	for _, ipAddr := range ipAddrs {
 		ipAddresses = append(ipAddresses, ipAddr.String())
 	}
-	return ipAddresses, nil
+	return ipAddresses, true, nil
 }
 
-func buildEndpoint(namespace, address string, service *consulapi.CatalogService, upstreams []*v1.Upstream) *v1.Endpoint {
-	return &v1.Endpoint{
+func buildEndpoint(namespace, address string, isAddress bool, service *consulapi.CatalogService, upstreams []*v1.Upstream) *v1.Endpoint {
+	ep := &v1.Endpoint{
 		Metadata: core.Metadata{
 			Namespace:       namespace,
 			Name:            buildEndpointName(service),
@@ -293,6 +293,14 @@ func buildEndpoint(namespace, address string, service *consulapi.CatalogService,
 		Address:   address,
 		Port:      uint32(service.ServicePort),
 	}
+
+	if isAddress {
+		ep.Metadata.Annotations = map[string]string{
+			"envoy.lb/hostname": address,
+		}
+	}
+
+	return ep
 }
 
 func buildEndpointName(service *consulapi.CatalogService) string {

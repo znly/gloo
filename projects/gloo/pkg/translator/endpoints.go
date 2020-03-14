@@ -2,6 +2,8 @@ package translator
 
 import (
 	"context"
+	"net/url"
+	"strings"
 
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	"go.opencensus.io/trace"
@@ -95,19 +97,35 @@ func addAnnotations(metadata *envoycore.Metadata, annotations map[string]string)
 		metadata.FilterMetadata = map[string]*structpb.Struct{}
 	}
 
-	fields := map[string]*structpb.Value{}
 	for k, v := range annotations {
-		fields[k] = &structpb.Value{
-			Kind: &structpb.Value_StringValue{
-				StringValue: v,
-			},
+		addToMeta(metadata.FilterMetadata, k, v)
+	}
+
+	return metadata
+}
+
+func addToMeta(filterMeta map[string]*structpb.Struct, k, v string) {
+
+	filterNS := SoloAnnotations
+
+	if strings.Contains(k, "/") {
+		if parsedKey, err := url.Parse(k); err == nil {
+			filterNS = parsedKey.Hostname()
+			k = parsedKey.Path
 		}
 	}
 
-	metadata.FilterMetadata[SoloAnnotations] = &structpb.Struct{
-		Fields: fields,
+	if metadata.FilterMetadata[filterNS] == nil {
+		metadata.FilterMetadata[filterNS] = &structpb.Struct{
+			Fields: fields,
+		}
 	}
-	return metadata
+
+	metadata.FilterMetadata[filterNS][k] = &structpb.Value{
+		Kind: &structpb.Value_StringValue{
+			StringValue: v,
+		},
+	}
 }
 
 func getLbMetadata(upstream *v1.Upstream, labels map[string]string, zeroValue string) *envoycore.Metadata {
