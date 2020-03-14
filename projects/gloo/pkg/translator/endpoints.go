@@ -121,7 +121,7 @@ func addToMeta(filterMeta map[string]*structpb.Struct, k, v string) {
 		}
 	}
 
-	filterMeta[filterNS][k] = &structpb.Value{
+	filterMeta[filterNS].Fields[k] = &structpb.Value{
 		Kind: &structpb.Value_StringValue{
 			StringValue: v,
 		},
