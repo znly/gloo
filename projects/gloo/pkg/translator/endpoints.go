@@ -115,13 +115,13 @@ func addToMeta(filterMeta map[string]*structpb.Struct, k, v string) {
 		}
 	}
 
-	if metadata.FilterMetadata[filterNS] == nil {
-		metadata.FilterMetadata[filterNS] = &structpb.Struct{
-			Fields: fields,
+	if filterMeta[filterNS] == nil || filterMeta[filterNS].Fields == nil {
+		filterMeta[filterNS] = &structpb.Struct{
+			Fields: map[string]*structpb.Value{},
 		}
 	}
 
-	metadata.FilterMetadata[filterNS][k] = &structpb.Value{
+	filterMeta[filterNS][k] = &structpb.Value{
 		Kind: &structpb.Value_StringValue{
 			StringValue: v,
 		},
