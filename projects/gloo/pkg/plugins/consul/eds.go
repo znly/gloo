@@ -167,7 +167,7 @@ func buildEndpointsFromSpecs(ctx context.Context, writeNamespace string, resolve
 	for _, spec := range specs {
 		if upstreams, ok := trackedServiceToUpstreams[spec.ServiceName]; ok {
 			if eps, err := buildEndpoints(writeNamespace, resolver, spec, upstreams); err != nil {
-				contextutils.LoggerFrom(ctx).Warnf("consul eds plugin encountered error resolving DNS for consul service %v", spec, err)
+				contextutils.LoggerFrom(ctx).Warnw("consul eds plugin encountered error resolving DNS for consul service ", "service", spec, "error", err)
 			} else {
 				endpoints = append(endpoints, eps...)
 			}
