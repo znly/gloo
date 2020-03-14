@@ -240,12 +240,23 @@ func routeActionFromInput(input options.InputRoute) (*gatewayv1.Route_RouteActio
 }
 
 func pluginsFromInput(input options.RoutePlugins) (*v1.RouteOptions, error) {
-	if input.PrefixRewrite.Value == nil {
-		return nil, nil
+
+	changed := false
+	var routeOptions v1.RouteOptions
+	if input.PrefixRewrite.Value != nil {
+		changed = true
+		routeOptions.PrefixRewrite = &types.StringValue{Value: *input.PrefixRewrite.Value}
 	}
-	return &v1.RouteOptions{
-		PrefixRewrite: &types.StringValue{Value: *input.PrefixRewrite.Value},
-	}, nil
+	if input.AutoHostRewrite {
+		changed = true
+		routeOptions.HostRewriteType = &v1.RouteOptions_AutoHostRewrite{
+			AutoHostRewrite: &types.BoolValue{Value: true},
+		}
+	}
+	if changed {
+		return &routeOptions, nil
+	}
+	return nil, nil
 }
 
 func destSpecFromInput(input options.DestinationSpec) (*v1.DestinationSpec, error) {

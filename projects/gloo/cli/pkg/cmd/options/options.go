@@ -157,7 +157,8 @@ type Destination struct {
 }
 
 type RoutePlugins struct {
-	PrefixRewrite PrefixRewrite
+	PrefixRewrite   PrefixRewrite
+	AutoHostRewrite bool
 }
 
 type PrefixRewrite struct {

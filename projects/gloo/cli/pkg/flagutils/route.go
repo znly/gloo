@@ -54,6 +54,7 @@ func AddRouteFlags(set *pflag.FlagSet, route *options.InputRoute) {
 
 	set.Var(&route.Plugins.PrefixRewrite, "prefix-rewrite", "rewrite the matched portion of HTTP requests with this prefix.\n"+
 		"note that this will be overridden if your routes point to function destinations")
+	set.BoolVarP(&route.Plugins.AutoHostRewrite, "auto-host-rewrite", "rewrite the host header to match the upstream cluster.")
 }
 
 func RemoveRouteFlags(set *pflag.FlagSet, route *options.RemoveRoute) {
