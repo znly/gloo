@@ -300,7 +300,7 @@ func buildEndpoint(namespace, address string, hostname string, service *consulap
 
 	if hostname != "" {
 		ep.Metadata.Annotations = map[string]string{
-			"envoy.lb/hostname": address,
+			"envoy.lb/hostname": hostname,
 		}
 	}
 
