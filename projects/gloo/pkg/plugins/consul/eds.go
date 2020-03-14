@@ -249,7 +249,11 @@ func buildEndpoints(namespace string, resolver DnsResolver, service *consulapi.C
 
 	var endpoints []*v1.Endpoint
 	for _, ipAddr := range ipAddresses {
-		endpoints = append(endpoints, buildEndpoint(namespace, ipAddr, changed, service, upstreams))
+		hostname := ""
+		if changed {
+			hostname = address
+		}
+		endpoints = append(endpoints, buildEndpoint(namespace, ipAddr, hostname, service, upstreams))
 	}
 	return endpoints, nil
 }
@@ -281,7 +285,7 @@ func getIpAddresses(address string, resolver DnsResolver) ([]string, bool, error
 	return ipAddresses, true, nil
 }
 
-func buildEndpoint(namespace, address string, isAddress bool, service *consulapi.CatalogService, upstreams []*v1.Upstream) *v1.Endpoint {
+func buildEndpoint(namespace, address string, hostname string, service *consulapi.CatalogService, upstreams []*v1.Upstream) *v1.Endpoint {
 	ep := &v1.Endpoint{
 		Metadata: core.Metadata{
 			Namespace:       namespace,
@@ -294,7 +298,7 @@ func buildEndpoint(namespace, address string, isAddress bool, service *consulapi
 		Port:      uint32(service.ServicePort),
 	}
 
-	if isAddress {
+	if hostname != "" {
 		ep.Metadata.Annotations = map[string]string{
 			"envoy.lb/hostname": address,
 		}
