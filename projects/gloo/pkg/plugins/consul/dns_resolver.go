@@ -22,17 +22,19 @@ type ConsulDnsResolver struct {
 }
 
 func NewConsulDnsResolver(dnsAddress string) *ConsulDnsResolver {
-	return &ConsulDnsResolver{
+	c := &ConsulDnsResolver{
 		DnsAddress: dnsAddress,
-		res: net.Resolver{
-			PreferGo: true, // otherwise we may use cgo which doesn't resolve on my mac in testing
-			Dial: func(ctx context.Context, network, address string) (conn net.Conn, err error) {
-				// DNS typically uses UDP and falls back to TCP if the response size is greater than one packet
-				// (originally 512 bytes). we use TCP to ensure we receive all IPs in a large DNS response
-				return net.DialContext(ctx, "tcp", c.DnsAddress)
-			},
+	}
+	c.res = net.Resolver{
+		PreferGo: true, // otherwise we may use cgo which doesn't resolve on my mac in testing
+		Dial: func(ctx context.Context, network, address string) (conn net.Conn, err error) {
+			// DNS typically uses UDP and falls back to TCP if the response size is greater than one packet
+			// (originally 512 bytes). we use TCP to ensure we receive all IPs in a large DNS response
+			var d net.Dialer
+			return d.DialContext(ctx, network, c.DnsAddress)
 		},
 	}
+	return c
 }
 
 func (c *ConsulDnsResolver) Resolve(address string) ([]net.IPAddr, error) {
