@@ -25,14 +25,16 @@ func NewConsulDnsResolver(dnsAddress string) *ConsulDnsResolver {
 	c := &ConsulDnsResolver{
 		DnsAddress: dnsAddress,
 	}
-	c.res = net.Resolver{
-		PreferGo: true, // otherwise we may use cgo which doesn't resolve on my mac in testing
-		Dial: func(ctx context.Context, network, address string) (conn net.Conn, err error) {
+
+	c.res = net.Resolver{}
+	if c.DnsAddress != "" {
+		c.res.PreferGo = true // otherwise we may use cgo which doesn't resolve on my mac in testing
+		c.res.Dial = func(ctx context.Context, network, address string) (conn net.Conn, err error) {
 			// DNS typically uses UDP and falls back to TCP if the response size is greater than one packet
 			// (originally 512 bytes). we use TCP to ensure we receive all IPs in a large DNS response
 			var d net.Dialer
 			return d.DialContext(ctx, network, c.DnsAddress)
-		},
+		}
 	}
 	return c
 }
