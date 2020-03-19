@@ -1,7 +1,6 @@
 package gateway_test
 
 import (
-	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -22,11 +21,6 @@ import (
 	"github.com/gogo/protobuf/types"
 	clienthelpers "github.com/solo-io/gloo/projects/gloo/cli/pkg/helpers"
 	"github.com/solo-io/solo-kit/pkg/api/v1/clients"
-
-	errors "github.com/rotisserie/eris"
-	"github.com/solo-io/gloo/projects/gloo/cli/pkg/cmd/check"
-	"github.com/solo-io/gloo/projects/gloo/cli/pkg/cmd/options"
-	"github.com/solo-io/solo-kit/pkg/api/v1/resources/core"
 
 	"github.com/solo-io/gloo/test/helpers"
 
@@ -84,24 +78,7 @@ func StartTestHelper() {
 	Expect(err).NotTo(HaveOccurred())
 
 	// Check that everything is OK
-	Eventually(func() error {
-		opts := &options.Options{
-			Metadata: core.Metadata{
-				Namespace: testHelper.InstallNamespace,
-			},
-			Top: options.Top{
-				Ctx: context.Background(),
-			},
-		}
-		ok, err := check.CheckResources(opts)
-		if err != nil {
-			return errors.Wrap(err, "unable to run glooctl check")
-		}
-		if ok {
-			return nil
-		}
-		return errors.New("glooctl check detected a problem with the installation")
-	}, "40s", "5s").Should(BeNil())
+	kube2e.GlooctlCheckEventuallyHealthy(testHelper)
 
 	// TODO(marco): explicitly enable strict validation, this can be removed once we enable validation by default
 	// See https://github.com/solo-io/gloo/issues/1374
