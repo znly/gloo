@@ -65,6 +65,8 @@ func (p *plugin) DiscoverUpstreams(watchNamespaces []string, writeNamespace stri
 
 		prevStr = curStr
 		prevHash = curHash
+		// adding the previous hash and string logic appears to save a lot of memory on startup
+		// we might want to buffer this channel instead of adding this hashing here to save memory
 		upstreamsChan <- upstreams
 	}
 
