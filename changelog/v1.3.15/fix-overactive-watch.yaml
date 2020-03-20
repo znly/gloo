@@ -1,0 +1,8 @@
+changelog:
+  - type: FIX
+    description: >
+      Fix memory leak in active (event-heavy) kubernetes environments which could lead to Gloo pods
+      (gloo, discovery, gateway) memory usage growing without bounds by ignoring update events where the new/old
+      resource is unchanged, which significantly helps Gloo keep pace with the pace of incoming events at
+      steady-state.
+    issueLink: https://github.com/solo-io/gloo/issues/2361
