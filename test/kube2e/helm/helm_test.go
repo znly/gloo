@@ -16,7 +16,7 @@ var _ = Describe("Kube2e: helm", func() {
 	It("uses helm to upgrade to a higher 1.3.x version without errors", func() {
 
 		// check that the version is 1.3.0
-		AssertGlooVersion(testHelper.InstallNamespace, "1.3.0")
+		Expect(GetGlooVersion(testHelper.InstallNamespace)).To(Equal("1.3.0"))
 
 		// upgrade to v1.3.14
 		runAndCleanCommand("helm", "upgrade", "gloo", "gloo/gloo",
@@ -24,7 +24,7 @@ var _ = Describe("Kube2e: helm", func() {
 			"--version", "v1.3.14")
 
 		// check that the version is 1.3.14 as expected
-		AssertGlooVersion(testHelper.InstallNamespace, "1.3.14")
+		Expect(GetGlooVersion(testHelper.InstallNamespace)).To(Equal("1.3.14"))
 
 		kube2e.GlooctlCheckEventuallyHealthy(testHelper)
 	})
@@ -37,10 +37,11 @@ var _ = Describe("Kube2e: helm", func() {
 		Expect(err).To(BeNil())
 		Expect(settings.GetGloo().GetInvalidConfigPolicy().GetInvalidRouteResponseCode()).To(Equal(uint32(404)))
 
-		// update the settings with `helm upgrade`
+		// update the settings with `helm upgrade` (without updating the gloo version)
 		runAndCleanCommand("helm", "upgrade", "gloo", "gloo/gloo",
 			"-n", testHelper.InstallNamespace,
-			"--set", "settings.invalidConfigPolicy.invalidRouteResponseCode=400")
+			"--set", "settings.invalidConfigPolicy.invalidRouteResponseCode=400",
+			"--version", GetGlooVersion(testHelper.InstallNamespace))
 
 		// check that the setting updated
 		settings, err = client.Read(testHelper.InstallNamespace, defaults.SettingsName, clients.ReadOpts{})
@@ -52,11 +53,16 @@ var _ = Describe("Kube2e: helm", func() {
 
 })
 
-func AssertGlooVersion(namespace string, v string) {
+func GetGlooVersion(namespace string) (v string) {
 	glooVersion, err := version.GetClientServerVersions(version.NewKube(namespace))
 	Expect(err).To(BeNil())
 	Expect(len(glooVersion.GetServer())).To(Equal(1))
 	for _, container := range glooVersion.GetServer()[0].GetKubernetes().GetContainers() {
-		Expect(container.Tag).To(Equal(v))
+		if v == "" {
+			v = container.Tag
+		} else {
+			Expect(container.Tag).To(Equal(v))
+		}
 	}
+	return v
 }
