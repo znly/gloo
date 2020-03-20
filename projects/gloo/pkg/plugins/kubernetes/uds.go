@@ -2,6 +2,9 @@ package kubernetes
 
 import (
 	"context"
+	"github.com/solo-io/gloo/test/debugprint"
+	"github.com/solo-io/go-utils/hashutils"
+
 	"github.com/solo-io/go-utils/contextutils"
 
 	"github.com/solo-io/gloo/pkg/utils"
@@ -34,8 +37,8 @@ func (p *plugin) DiscoverUpstreams(watchNamespaces []string, writeNamespace stri
 	opts = opts.WithDefaults()
 	upstreamsChan := make(chan v1.UpstreamList)
 	errs := make(chan error)
-	//var prevHash uint64
-	//var prevStr string
+	var prevHash uint64
+	var prevStr string
 	discoverUpstreams := func() {
 		var serviceList []*kubev1.Service
 		for _, ns := range watchNamespaces {
@@ -49,19 +52,19 @@ func (p *plugin) DiscoverUpstreams(watchNamespaces []string, writeNamespace stri
 		upstreams := p.ConvertServices(ctx, watchNamespaces, serviceList, discOpts, writeNamespace)
 		logger.Debugw("discovered services", "num", len(upstreams))
 
-		//curHash, err := hashutils.HashAllSafe(nil, upstreams.AsInterfaces())
-		//curStr := debugprint.SprintAny(upstreams.Sort())
-		//if err != nil {
-		//	panic(err)
-		//}
-		//if prevHash == curHash || curStr == prevStr { // TODO(kdorosh) for some reaosn hash not equal here, but strings are...
-		//	contextutils.LoggerFrom(opts.Ctx).Debugf("kube uds detected same services, not sending upstream")
-		//	return
-		//}
-		//contextutils.LoggerFrom(opts.Ctx).Debugf("kube uds detected diff services, sending upstream")
-		//
-		//prevStr = curStr
-		//prevHash = curHash
+		curHash, err := hashutils.HashAllSafe(nil, upstreams.AsInterfaces())
+		curStr := debugprint.SprintAny(upstreams.Sort())
+		if err != nil {
+			panic(err)
+		}
+		if prevHash == curHash || curStr == prevStr { // TODO(kdorosh) for some reaosn hash not equal here, but strings are...
+			contextutils.LoggerFrom(opts.Ctx).Debugf("kube uds detected same services, not sending upstream")
+			return
+		}
+		contextutils.LoggerFrom(opts.Ctx).Debugf("kube uds detected diff services, sending upstream")
+
+		prevStr = curStr
+		prevHash = curHash
 		upstreamsChan <- upstreams
 	}
 
