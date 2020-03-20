@@ -906,8 +906,6 @@ github.com/solo-io/reporting-client v0.1.2/go.mod h1:FmBDzwc1zEwayCCrlP+1w7NcpM0
 github.com/solo-io/solo-kit v0.6.3/go.mod h1:oBaQ6tOwuO97u7w+s3TeI08YLHcbiWemInx0XkDfKFw=
 github.com/solo-io/solo-kit v0.12.1/go.mod h1:oNDT3CNTgdjNh5tgkr4Wj8tj+h0VtJjfT/ZaZ8e1/js=
 github.com/solo-io/solo-kit v0.12.2/go.mod h1:oNDT3CNTgdjNh5tgkr4Wj8tj+h0VtJjfT/ZaZ8e1/js=
-github.com/solo-io/solo-kit v0.13.2 h1:kBJxH/L8DRWWKh74Ud6/xPMn/8beCLSrW6uETlCzVCs=
-github.com/solo-io/solo-kit v0.13.2/go.mod h1:Sukhlm32r1cSJIztPQ6RZxroK0VP4TGOkTecaBXTEoo=
 github.com/solo-io/solo-kit v0.13.3-0.20200320154406-eb8e5cb3ea31 h1:BRp21kKVkMoemPj1gPR2ms35S7GQ5x4zKLZ1Tgdg37c=
 github.com/solo-io/solo-kit v0.13.3-0.20200320154406-eb8e5cb3ea31/go.mod h1:Sukhlm32r1cSJIztPQ6RZxroK0VP4TGOkTecaBXTEoo=
 github.com/solo-io/wasme v0.0.1/go.mod h1:Zb85GQMTyx7NEyEINCUiofKE9KZLjQVF6obvHOHBQE8=
