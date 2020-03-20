@@ -1,0 +1,6 @@
+changelog:
+  - type: FIX
+    description: >
+      Pull in fix from solo-kit where GetStatusKeys was returning a slice with an empty string.
+    issueLink: https://github.com/solo-io/gloo/issues/2645
+    resolvesIssue: false
