@@ -4,3 +4,7 @@ changelog:
       Pull in fix from solo-kit where GetStatusKeys was returning a slice with an empty string.
     issueLink: https://github.com/solo-io/gloo/issues/2645
     resolvesIssue: false
+  - type: DEPENDENCY_BUMP
+    dependencyOwner: solo-io
+    dependencyRepo: solo-kit
+    dependencyTag: v0.13.3
