@@ -86,6 +86,14 @@ func TearDownTestHelper() {
 func runAndCleanCommand(name string, arg ...string) []byte {
 	cmd := exec.Command(name, arg...)
 	b, err := cmd.Output()
+	// temporary add for debugging
+	if err != nil {
+		if v, ok := err.(*exec.ExitError); ok {
+			fmt.Println("ExitError: ", string(v.Stderr))
+		} else {
+			fmt.Println("Other Error:", err.Error())
+		}
+	}
 	Expect(err).To(BeNil())
 	cmd.Process.Kill()
 	cmd.Process.Release()
