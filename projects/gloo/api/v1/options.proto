@@ -157,6 +157,7 @@ message RouteOptions {
     // For requests matched on this route, rewrite the HTTP request path to the provided value before forwarding upstream
     google.protobuf.StringValue prefix_rewrite = 3;
     google.protobuf.Duration timeout = 4 [(gogoproto.stdduration) = true];
+    google.protobuf.Duration idle_timeout = 666 [(gogoproto.stdduration) = true];
     retries.options.gloo.solo.io.RetryPolicy retries = 5;
     // Extensions will be passed along from Listeners, Gateways, VirtualServices, Routes, and Route tables to the
     // underlying Proxy, making them useful for controllers, validation tools, etc. which interact with kubernetes yaml.

@@ -30,4 +30,6 @@ message ConnectionConfig {
     }
     // Configure OS-level tcp keepalive checks
     TcpKeepAlive tcp_keepalive = 3;
+    // perConnectionBufferLimitBytes
+    uint32 per_connection_buffer_limit_bytes = 4; 
 }

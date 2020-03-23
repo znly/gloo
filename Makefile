@@ -116,7 +116,7 @@ clean:
 	rm -rf docs/resources
 	git clean -f -X install
 
-# This is required to run if making changes to proto files then run `make generated-code -B`
+# This is required to run if making changes to proto files then run `go `
 clean-generated-code:
 	rm -rf projects/gloo/pkg/plugins/grpc/*.descriptor.go
 
@@ -133,7 +133,6 @@ generated-code: $(OUTPUT_DIR)/.generated-code verify-enterprise-protos update-li
 SUBDIRS:=$(shell ls -d -- */ | grep -v vendor)
 $(OUTPUT_DIR)/.generated-code:
 	go mod tidy
-	find * -type f | grep .sk.md | xargs rm
 	GO111MODULE=on go generate ./...
 	rm docs/content/reference/cli/glooctl*; GO111MODULE=on go run projects/gloo/cli/cmd/docs/main.go
 	gofmt -w $(SUBDIRS)

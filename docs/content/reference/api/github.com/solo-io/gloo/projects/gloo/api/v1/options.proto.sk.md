@@ -160,6 +160,7 @@ to be usable by Gloo. (plugins currently need to be compiled into Gloo)
 "faults": .fault.options.gloo.solo.io.RouteFaults
 "prefixRewrite": .google.protobuf.StringValue
 "timeout": .google.protobuf.Duration
+"idleTimeout": .google.protobuf.Duration
 "retries": .retries.options.gloo.solo.io.RetryPolicy
 "extensions": .gloo.solo.io.Extensions
 "tracing": .tracing.options.gloo.solo.io.RouteTracingSettings
@@ -186,6 +187,7 @@ to be usable by Gloo. (plugins currently need to be compiled into Gloo)
 | `faults` | [.fault.options.gloo.solo.io.RouteFaults](../options/faultinjection/fault.proto.sk/#routefaults) |  |  |
 | `prefixRewrite` | [.google.protobuf.StringValue](https://developers.google.com/protocol-buffers/docs/reference/csharp/class/google/protobuf/well-known-types/string-value) | For requests matched on this route, rewrite the HTTP request path to the provided value before forwarding upstream. |  |
 | `timeout` | [.google.protobuf.Duration](https://developers.google.com/protocol-buffers/docs/reference/csharp/class/google/protobuf/well-known-types/duration) |  |  |
+| `idleTimeout` | [.google.protobuf.Duration](https://developers.google.com/protocol-buffers/docs/reference/csharp/class/google/protobuf/well-known-types/duration) |  |  |
 | `retries` | [.retries.options.gloo.solo.io.RetryPolicy](../options/retries/retries.proto.sk/#retrypolicy) |  |  |
 | `extensions` | [.gloo.solo.io.Extensions](../extensions.proto.sk/#extensions) | Extensions will be passed along from Listeners, Gateways, VirtualServices, Routes, and Route tables to the underlying Proxy, making them useful for controllers, validation tools, etc. which interact with kubernetes yaml. Some sample use cases: * controllers, deployment pipelines, helm charts, etc. which wish to use extensions as a kind of opaque metadata. * In the future, Gloo may support gRPC-based plugins which communicate with the Gloo translator out-of-process. Opaque Extensions enables development of out-of-process plugins without requiring recompiling & redeploying Gloo's API. |  |
 | `tracing` | [.tracing.options.gloo.solo.io.RouteTracingSettings](../options/tracing/tracing.proto.sk/#routetracingsettings) | Defines route-specific tracing configuration. See here for additional information on Envoy's tracing capabilities: https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/observability/tracing.html See here for additional information about configuring tracing with Gloo: https://gloo.solo.io/observability/tracing/. |  |

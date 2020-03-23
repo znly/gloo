@@ -887,6 +887,7 @@ google.protobuf.Duration max_interval = 2
 // the base interval. The documentation for `config_http_filters_router_x-envoy-max-retries`
 // describes Envoy's back-off algorithm.
 RetryBackOff retry_back_off = 8;
+
 }
 
 // HTTP request hedging `architecture overview (arch_overview_http_routing_hedging)`.

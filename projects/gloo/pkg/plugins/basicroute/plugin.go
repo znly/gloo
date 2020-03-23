@@ -43,6 +43,9 @@ func (p *Plugin) ProcessRoute(params plugins.RouteParams, in *v1.Route, out *env
 	if err := applyTimeout(in, out); err != nil {
 		return err
 	}
+	if err := applyIdleTimeout(in, out); err != nil {
+		return err
+	}
 	if err := applyRetries(in, out); err != nil {
 		return err
 	}
@@ -86,6 +89,22 @@ func applyTimeout(in *v1.Route, out *envoyroute.Route) error {
 	}
 
 	routeAction.Route.Timeout = gogoutils.DurationStdToProto(in.Options.Timeout)
+	return nil
+}
+
+func applyIdleTimeout(in *v1.Route, out *envoyroute.Route) error {
+	if in.Options.IdleTimeout == nil {
+		return nil
+	}
+	routeAction, ok := out.Action.(*envoyroute.Route_Route)
+	if !ok {
+		return errors.Errorf("timeout is only available for Route Actions")
+	}
+	if routeAction.Route == nil {
+		return errors.Errorf("internal error: route %v specified a prefix, but output Envoy object "+
+			"had nil route", in.Action)
+	}
+	routeAction.Route.IdleTimeout = gogoutils.DurationStdToProto(in.Options.IdleTimeout)
 	return nil
 }
 

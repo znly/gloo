@@ -40,6 +40,11 @@ func (p *Plugin) ProcessUpstream(params plugins.Params, in *v1.Upstream, out *en
 	if cfg.ConnectTimeout != nil {
 		out.ConnectTimeout = gogoutils.DurationStdToProto(cfg.ConnectTimeout)
 	}
+	if cfg.PerConnectionBufferLimitBytes > 0 {
+		out.PerConnectionBufferLimitBytes = &wrappers.UInt32Value{
+			Value: cfg.PerConnectionBufferLimitBytes,
+		}
+	}
 
 	if cfg.TcpKeepalive != nil {
 		out.UpstreamConnectionOptions = &envoyapi.UpstreamConnectionOptions{

@@ -76,6 +76,7 @@ message Upstream {
         consul.options.gloo.solo.io.UpstreamSpec consul = 16;
         aws_ec2.options.gloo.solo.io.UpstreamSpec aws_ec2 = 17;
     }
+
 }
 
 // created by discovery services
