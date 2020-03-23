@@ -487,7 +487,12 @@ func setEnvoyPathMatcher(in *matchers.Matcher, out *envoyroute.RouteMatch) {
 		out.PathSpecifier = &envoyroute.RouteMatch_SafeRegex{
 			SafeRegex: &envoy_type_matcher.RegexMatcher{
 				EngineType: &envoy_type_matcher.RegexMatcher_GoogleRe2{
-					GoogleRe2: &envoy_type_matcher.RegexMatcher_GoogleRE2{},
+					GoogleRe2: &envoy_type_matcher.RegexMatcher_GoogleRE2{
+						MaxProgramSize: &wrappers.UInt32Value{
+							// Dirty for now
+							Value: 1000,
+						},
+					},
 				},
 				Regex: path.Regex,
 			},
